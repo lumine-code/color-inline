@@ -523,6 +523,14 @@ describe("ColorBufferElement decoration styles", function () {
   beforeEach(() => (element = new ColorBufferElement()));
 
   describe("::getHighlighDecorationCSS", function () {
+    it("uses a solid background for an opaque color", function () {
+      const css = cssFor(new Color(255, 0, 0), "background", new Color("#ffffff"));
+
+      expect(css).toContain("background-color: rgb(255,0,0)");
+      expect(css).not.toContain("background-image:");
+      return expect(css).not.toContain("repeating-conic-gradient");
+    });
+
     it("paints the color once, so its alpha reads as written", function () {
       const css = cssFor(new Color(255, 0, 0, 0.5), "background", new Color("#ffffff"));
 
@@ -542,11 +550,39 @@ describe("ColorBufferElement decoration styles", function () {
     it("reads the color on its own when the backdrop is unknown", () =>
       expect(cssFor(new Color(255, 255, 255, 0.06), "background", null)).toContain("color: black"));
 
-    return it("paints an underline once as well", function () {
+    it("uses a solid underline for an opaque color", function () {
+      const css = cssFor(new Color(255, 0, 0), "underline", null);
+
+      expect(css).toContain("background-color: rgb(255,0,0)");
+      return expect(css).not.toContain("repeating-conic-gradient");
+    });
+
+    return it("paints a transparent underline once as well", function () {
       const css = cssFor(new Color(255, 0, 0, 0.5), "underline", null);
 
       expect(css).not.toContain("background-color:");
       return expect(css).toContain("repeating-conic-gradient");
+    });
+  });
+
+  describe("::getGutterDecorationItem", function () {
+    const spanFor = (color) =>
+      element.getGutterDecorationItem({ id: 42, color }).querySelector("span");
+
+    it("uses a solid background for an opaque color", function () {
+      const span = spanFor(new Color(255, 0, 0));
+
+      expect(span.style.backgroundColor).toBe("rgb(255, 0, 0)");
+      expect(span.style.backgroundImage).toBe("");
+      return expect(span.dataset.markerId).toBe("42");
+    });
+
+    return it("keeps the transparency grid for a translucent color", function () {
+      const span = spanFor(new Color(255, 0, 0, 0.5));
+
+      expect(span.style.backgroundImage).toContain("rgba(255, 0, 0, 0.5)");
+      expect(span.style.backgroundImage).toContain("repeating-conic-gradient");
+      return expect(span.style.backgroundSize).toBe("auto, 10px 10px");
     });
   });
 
