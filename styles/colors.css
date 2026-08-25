@@ -447,23 +447,19 @@ colors-palette {
     display: none;
   }
 
+  .colors-color-group-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
   .colors-color-group-header-content {
     border-bottom: 1px solid var(--base-border-color);
     display: inline-block;
     background: var(--syntax-background-color);
+    box-sizing: border-box;
     padding: var(--component-padding);
     width: 100%;
-
-    &.fixed {
-      position: fixed;
-      width: 100%;
-      box-sizing: border-box;
-      z-index: 10;
-    }
-
-    &.absolute {
-      position: absolute;
-    }
   }
 
   .colors-palette-list {

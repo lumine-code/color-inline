@@ -184,6 +184,15 @@ describe("PaletteElement", function () {
         return expect(ols.length).toEqual(colorsByFile().size);
       });
 
+      it("keeps group headers sticky without a scroll handler", async function () {
+        const header = paletteElement.querySelector(".colors-color-group-header");
+        const style = getComputedStyle(header);
+
+        expect(style.position).toBe("sticky");
+        expect(style.top).toBe("0px");
+        expect(paletteElement.stickyTitle).not.toBeDefined();
+      });
+
       describe("and the sortPaletteColors is set to name", function () {
         beforeEach(async () => lumine.config.set("colors.sortPaletteColors", "by name"));
 
