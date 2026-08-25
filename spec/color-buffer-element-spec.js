@@ -236,6 +236,44 @@ describe("ColorBufferElement", function () {
         });
       });
 
+      describe("when the marker type is set to dot", function () {
+        beforeEach(async function () {
+          await waitsForPromise(() => colorBuffer.initialize());
+          lumine.config.set("colors.markerType", "dot");
+        });
+
+        it("does no offset work for a vertical scroll", async function () {
+          spyOn(colorBufferElement, "scheduleDotDecorationsOffsetsUpdate").and.callThrough();
+
+          editorElement.emitter.emit("did-change-scroll-top", 10);
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+
+          expect(colorBufferElement.scheduleDotDecorationsOffsetsUpdate).not.toHaveBeenCalled();
+        });
+
+        it("coalesces horizontal scroll events into one offset update", async function () {
+          spyOn(colorBufferElement, "updateDotDecorationsOffsets").and.callThrough();
+
+          editorElement.emitter.emit("did-change-scroll-left", 10);
+          editorElement.emitter.emit("did-change-scroll-left", 20);
+          editorElement.emitter.emit("did-change-scroll-left", 30);
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+
+          expect(colorBufferElement.updateDotDecorationsOffsets.calls.count()).toBe(1);
+        });
+
+        return it("cancels a pending offset update when the marker type changes", async function () {
+          spyOn(colorBufferElement, "updateDotDecorationsOffsets").and.callThrough();
+
+          editorElement.emitter.emit("did-change-scroll-left", 10);
+          lumine.config.set("colors.markerType", "background");
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+
+          expect(colorBufferElement.updateDotDecorationsOffsets).not.toHaveBeenCalled();
+          expect(colorBufferElement.dotDecorationsOffsetsFrame).toBeNull();
+        });
+      });
+
       return describe("when the marker type is set to gutter", function () {
         let [gutter] = Array.from([]);
 
@@ -583,6 +621,46 @@ describe("ColorBufferElement decoration styles", function () {
       expect(span.style.backgroundImage).toContain("rgba(255, 0, 0, 0.5)");
       expect(span.style.backgroundImage).toContain("repeating-conic-gradient");
       return expect(span.style.backgroundSize).toBe("auto, 10px 10px");
+    });
+  });
+
+  describe("::updateDotDecorationsOffsets", function () {
+    it("visits each marker once and measures each row once", function () {
+      const items = [{ style: {} }, { style: {} }, { style: {} }];
+      const markers = items.map((item, index) => ({
+        id: index + 1,
+        marker: {
+          getStartScreenPosition: jasmine
+            .createSpy(`position-${index}`)
+            .and.returnValue({ row: 10 }),
+        },
+      }));
+      markers.push({
+        id: 99,
+        marker: {
+          getStartScreenPosition: jasmine
+            .createSpy("missing-decoration")
+            .and.returnValue({ row: 10 }),
+        },
+      });
+      const pixelPosition = jasmine.createSpy("pixel-position").and.returnValue({ left: 100 });
+      element.editor = { isDestroyed: () => false };
+      element.editorElement = {
+        getScrollLeft: () => 5,
+        pixelPositionForScreenPosition: pixelPosition,
+      };
+      element.displayedMarkers = markers;
+      element.decorationByMarkerId = Object.fromEntries(
+        items.map((item, index) => [index + 1, { getProperties: () => ({ item }) }]),
+      );
+      lumine.config.set("colors.maxDecorationsInGutter", 100);
+
+      expect(element.updateDotDecorationsOffsets(0, 20)).toBe(3);
+      expect(
+        markers.every((marker) => marker.marker.getStartScreenPosition.calls.count() === 1),
+      ).toBe(true);
+      expect(pixelPosition.calls.count()).toBe(1);
+      expect(items.map((item) => item.style.left)).toEqual(["95px", "109px", "123px"]);
     });
   });
 
