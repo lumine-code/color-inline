@@ -14,6 +14,7 @@ describe("ColorResultsElement", function () {
     registerViewProvider();
     lumine.config.set("colors.delayBeforeScan", 0);
     lumine.config.set("colors.sourceNames", ["**/*.styl", "**/*.less"]);
+    lumine.config.set("core.ignoredNames", []);
 
     await waitsForPromise(() =>
       lumine.packages.activatePackage("colors").then(function (pkg) {
@@ -48,7 +49,9 @@ describe("ColorResultsElement", function () {
     it("groups results by files", async function () {
       const fileResults = resultsElement.querySelectorAll(".list-nested-item");
 
-      expect(fileResults.length).toEqual(8);
+      // The shared ignored-name semantics exclude descendants of an ignored
+      // directory as well as the directory row itself.
+      expect(fileResults.length).toEqual(7);
 
       return expect(fileResults[0].querySelectorAll("li.list-item").length).toEqual(3);
     });
