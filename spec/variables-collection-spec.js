@@ -448,6 +448,36 @@ describe("VariablesCollection", function () {
     //#    ##    ##  ##       ##    ##    ##    ##     ## ##    ##  ##
     //#    ##     ## ########  ######     ##     #######  ##     ## ########
 
+    describe("::initialize", function () {
+      it("yields while restoring a collection that exceeds one frame", function () {
+        const frames = [];
+        const content = [
+          createVar("foo", "#fff", [0, 10], "/path/to/foo.styl", 1),
+          createVar("bar", "foo", [12, 20], "/path/to/foo.styl", 2),
+          createVar("baz", "0.5", [22, 30], "/path/to/foo.styl", 3),
+        ];
+
+        spyOn(window, "requestAnimationFrame").and.callFake((callback) => {
+          frames.push(callback);
+        });
+        spyOn(Date, "now").and.returnValues(0, 0, 17);
+
+        collection.initialized = false;
+        collection.initialize(content);
+
+        expect(collection.length).toEqual(1);
+        expect(collection.initialized).toBeFalsy();
+        expect(content.length).toEqual(3);
+        expect(frames.length).toEqual(1);
+
+        Date.now.and.returnValue(17);
+        frames.shift()();
+
+        expect(collection.length).toEqual(3);
+        expect(collection.initialized).toBeTruthy();
+      });
+    });
+
     describe("::serialize", function () {
       describe("with an empty collection", () =>
         it("returns an empty serialized collection", () =>

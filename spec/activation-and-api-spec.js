@@ -107,6 +107,18 @@ describe("Colors", function () {
       return expect(colorBuffer.destroy).toHaveBeenCalled();
     });
 
+    it("removes the commands registered during activation", function () {
+      const workspaceCommands = lumine.commands
+        .findCommands({ target: workspaceElement })
+        .map((command) => command.name);
+      const editorCommands = lumine.commands
+        .findCommands({ target: editorElement })
+        .map((command) => command.name);
+
+      expect(workspaceCommands).not.toContain("colors:reload");
+      expect(editorCommands).not.toContain("colors:copy-as-hex");
+    });
+
     return it("destroys the color buffer element that were added to the DOM", async () =>
       expect(editorElement.querySelector("colors-markers")).not.toExist());
   });
