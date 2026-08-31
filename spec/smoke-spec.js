@@ -1,5 +1,7 @@
 // The first thing to establish after a port this large: the package loads, its
 // commands register, and a buffer actually gets colour markers.
+const { Icon } = require("lumine");
+
 describe("color-inline", () => {
   let workspaceElement, mainModule;
 
@@ -43,6 +45,30 @@ describe("color-inline", () => {
     ]) {
       expect(customElements.get(name)).toBeDefined();
     }
+  });
+
+  it("routes result file paths through the shared icon registry", () => {
+    const ColorResultsElement = require("../lib/color-results-element");
+    const element = new ColorResultsElement();
+    workspaceElement.appendChild(element);
+    element.addFileResult({ filePath: "result.css", matches: [] });
+    const icon = element.querySelector(".color-result-file-icon");
+    expect(icon).toHaveClass("icon-file-text");
+
+    const iconProvider = lumine.icons.addProvider(
+      {
+        id: "color-inline-spec",
+        handles: ["path"],
+        usesContext: true,
+        iconFor(target) {
+          return target.context === "color-inline" ? Icon.classes(["icon-flame"]) : null;
+        },
+      },
+      { priority: 100 },
+    );
+    expect(icon).toHaveClass("icon-flame");
+    iconProvider.dispose();
+    element.remove();
   });
 
   it("builds a project and exposes it through the service", () => {
