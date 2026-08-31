@@ -1,19 +1,19 @@
-﻿// The first thing to establish after a port this large: the package loads, its
+// The first thing to establish after a port this large: the package loads, its
 // commands register, and a buffer actually gets colour markers.
-describe("colors", () => {
+describe("color-inline", () => {
   let workspaceElement, mainModule;
 
   beforeEach(async () => {
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
-    lumine.config.set("colors.delayBeforeScan", 0);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
 
-    const pack = await lumine.packages.activatePackage("colors");
+    const pack = await lumine.packages.activatePackage("color-inline");
     mainModule = pack.mainModule;
   });
 
   it("activates", () => {
-    expect(lumine.packages.isPackageActive("colors")).toBe(true);
+    expect(lumine.packages.isPackageActive("color-inline")).toBe(true);
   });
 
   it("registers its workspace commands", () => {
@@ -21,10 +21,10 @@ describe("colors", () => {
       .findCommands({ target: workspaceElement })
       .map((command) => command.name);
 
-    expect(commands).toContain("colors:find-colors");
-    expect(commands).toContain("colors:show-palette");
-    expect(commands).toContain("colors:project-settings");
-    expect(commands).toContain("colors:reload");
+    expect(commands).toContain("color-inline:find-colors");
+    expect(commands).toContain("color-inline:show-palette");
+    expect(commands).toContain("color-inline:project-settings");
+    expect(commands).toContain("color-inline:reload");
   });
 
   it("defines its custom elements", () => {
@@ -36,17 +36,17 @@ describe("colors", () => {
     require("../lib/palette-element");
 
     for (const name of [
-      "colors-markers",
-      "colors-color-project",
-      "colors-color-results",
-      "colors-palette",
+      "color-inline-markers",
+      "color-inline-color-project",
+      "color-inline-color-results",
+      "color-inline-palette",
     ]) {
       expect(customElements.get(name)).toBeDefined();
     }
   });
 
   it("builds a project and exposes it through the service", () => {
-    const api = mainModule.provideColorsProject();
+    const api = mainModule.provideColorInlineProject();
     expect(api.getProject()).toBeTruthy();
   });
 

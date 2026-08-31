@@ -1,21 +1,21 @@
-# colors.variable-expressions
+# color-inline.variable-expressions
 
-Lets a package teach `colors` to recognise a variable declaration it does not know, so the values it declares can be resolved wherever they are used.
+Lets a package teach `color-inline` to recognise a variable declaration it does not know, so the values it declares can be resolved wherever they are used.
 
 |             |                                         |
 | ----------- | --------------------------------------- |
 | Version     | `1.0.0`                                 |
 | Provided by | any package adding a declaration syntax |
-| Consumed by | `colors`                                |
-| Owner       | `colors`                                |
+| Consumed by | `color-inline`                          |
+| Owner       | `color-inline`                          |
 
-This is a hub contract: `colors` is the consumer, and other packages provide into it.
+This is a hub contract: `color-inline` is the consumer, and other packages provide into it.
 
 ## Registration
 
 ```json
 "providedServices": {
-  "colors.variable-expressions": {
+  "color-inline.variable-expressions": {
     "versions": {
       "1.0.0": "provideVariableExpressions"
     }
@@ -23,7 +23,7 @@ This is a hub contract: `colors` is the consumer, and other packages provide int
 }
 ```
 
-Return either one expression or `{ expressions: [...] }`. `colors` hands back a `Disposable` that removes what you registered.
+Return either one expression or `{ expressions: [...] }`. `color-inline` hands back a `Disposable` that removes what you registered.
 
 ## Contract
 

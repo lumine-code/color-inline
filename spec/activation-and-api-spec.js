@@ -1,17 +1,17 @@
-﻿const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
+const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
  * DS102: Remove unnecessary code created because of implicit returns
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-const { Disposable } = require("lumine");
-const ColorsAPI = require("../lib/colors-api");
+const { Disposable, TextEditor } = require("lumine");
+const ColorInlineAPI = require("../lib/color-inline-api");
 const registry = require("../lib/variable-expressions");
 
 const { SERIALIZE_VERSION, SERIALIZE_MARKERS_VERSION } = require("../lib/versions");
 
-describe("Colors", function () {
+describe("Color Inline", function () {
   let [workspaceElement, colors, project] = Array.from([]);
 
   // Waits until the variable count stops moving, so an assertion cannot land
@@ -32,21 +32,21 @@ describe("Colors", function () {
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
 
-    lumine.config.set("colors.delayBeforeScan", 0);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
 
-    lumine.config.set("colors.sourceNames", ["**/*.sass", "**/*.styl"]);
-    lumine.config.set("colors.ignoredNames", []);
-    lumine.config.set("colors.ignoredScopes", []);
-    lumine.config.set("colors.autocompleteScopes", []);
+    lumine.config.set("color-inline.sourceNames", ["**/*.sass", "**/*.styl"]);
+    lumine.config.set("color-inline.ignoredNames", []);
+    lumine.config.set("color-inline.ignoredScopes", []);
+    lumine.config.set("color-inline.autocompleteScopes", []);
 
     registry.createExpression(
-      "colors:txt_vars",
+      "color-inline:txt_vars",
       "^[ \\t]*([a-zA-Z_$][a-zA-Z0-9\\-_]*)\\s*=(?!=)\\s*([^\\n\\r;]*);?$",
       ["txt"],
     );
 
     await waitsForPromise({ label: "colors activation" }, () =>
-      lumine.packages.activatePackage("colors").then(function (pkg) {
+      lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
         return (project = colors.getProject());
       }),
@@ -54,7 +54,7 @@ describe("Colors", function () {
   });
 
   afterEach(async function () {
-    registry.removeExpression("colors:txt_vars");
+    registry.removeExpression("color-inline:txt_vars");
     return project != null ? project.destroy() : undefined;
   });
 
@@ -88,7 +88,7 @@ describe("Colors", function () {
       );
 
       await waitsFor("colors markers appended to the DOM", () =>
-        editorElement.querySelector("colors-markers"),
+        editorElement.querySelector("color-inline-markers"),
       );
 
       await runs(async function () {
@@ -115,18 +115,18 @@ describe("Colors", function () {
         .findCommands({ target: editorElement })
         .map((command) => command.name);
 
-      expect(workspaceCommands).not.toContain("colors:reload");
-      expect(editorCommands).not.toContain("colors:copy-as-hex");
+      expect(workspaceCommands).not.toContain("color-inline:reload");
+      expect(editorCommands).not.toContain("color-inline:copy-as-hex");
     });
 
     return it("destroys the color buffer element that were added to the DOM", async () =>
-      expect(editorElement.querySelector("colors-markers")).not.toExist());
+      expect(editorElement.querySelector("color-inline-markers")).not.toExist());
   });
 
-  describe("colors:project-settings", function () {
+  describe("color-inline:project-settings", function () {
     let item = null;
     beforeEach(async function () {
-      lumine.commands.dispatch(workspaceElement, "colors:project-settings");
+      lumine.commands.dispatch(workspaceElement, "color-inline:project-settings");
 
       await waitsFor("active pane item", function () {
         item = lumine.workspace.getActivePaneItem();
@@ -135,7 +135,41 @@ describe("Colors", function () {
     });
 
     return it("opens a settings view in the active pane", async () =>
-      item.matches("colors-color-project"));
+      item.matches("color-inline-color-project"));
+  });
+
+  describe("editor commands", function () {
+    let editor, miniEditor, miniElement;
+
+    beforeEach(async function () {
+      editor = await lumine.workspace.open("command-scope.css");
+      editor.setText("#fff");
+      editor.setCursorBufferPosition([0, 1]);
+      await project.colorBufferForEditor(editor).initialize();
+
+      miniEditor = new TextEditor({ mini: true });
+      miniEditor.setText("#000");
+      miniElement = lumine.views.getView(miniEditor);
+      jasmine.attachToDOM(miniElement);
+      miniElement.focus();
+    });
+
+    afterEach(() => miniEditor.destroy());
+
+    it("does not expose conversion commands in a mini editor", function () {
+      const commands = lumine.commands
+        .findCommands({ target: miniElement })
+        .map((command) => command.name);
+
+      expect(commands).not.toContain("color-inline:convert-to-rgb");
+    });
+
+    return it("does not modify the active file when dispatched from a mini editor", function () {
+      lumine.commands.dispatch(miniElement, "color-inline:convert-to-rgb");
+
+      expect(editor.getText()).toBe("#fff");
+      expect(miniEditor.getText()).toBe("#000");
+    });
   });
 
   //#       ###    ########  ####
@@ -156,13 +190,13 @@ describe("Colors", function () {
         }),
       );
 
-      await runs(() => (service = colors.provideColorsProject()));
+      await runs(() => (service = colors.provideColorInlineProject()));
 
       await waitsForPromise({ label: "project initialized" }, () => project.initialize());
     });
 
     it("returns an object conforming to the API", async function () {
-      expect(service instanceof ColorsAPI).toBeTruthy();
+      expect(service instanceof ColorInlineAPI).toBeTruthy();
 
       expect(service.getProject()).toBe(project);
 
@@ -358,9 +392,9 @@ describe("Colors", function () {
 
         project.onDidUpdateVariables(variableSpy);
 
-        lumine.config.set("colors.delayBeforeScan", 0);
+        lumine.config.set("color-inline.delayBeforeScan", 0);
 
-        lumine.config.set("colors.sourceNames", ["**/*.txt"]);
+        lumine.config.set("color-inline.sourceNames", ["**/*.txt"]);
 
         await waitsFor("variables updated", () => variableSpy.calls.count() > 1);
 
@@ -386,9 +420,9 @@ describe("Colors", function () {
 
           project.onDidUpdateVariables(variableSpy);
 
-          lumine.config.set("colors.delayBeforeScan", 0);
+          lumine.config.set("color-inline.delayBeforeScan", 0);
 
-          lumine.config.set("colors.sourceNames", ["**/*.txt"]);
+          lumine.config.set("color-inline.sourceNames", ["**/*.txt"]);
 
           await waitsFor("variables updated", () => variableSpy.calls.count() > 1);
 
@@ -466,8 +500,8 @@ describe("Colors", function () {
 
       project.onDidUpdateVariables(variableSpy);
 
-      lumine.config.set("colors.delayBeforeScan", 0);
-      lumine.config.set("colors.sourceNames", ["**/*.txt"]);
+      lumine.config.set("color-inline.delayBeforeScan", 0);
+      lumine.config.set("color-inline.sourceNames", ["**/*.txt"]);
 
       await waitsFor("variables updated", () => variableSpy.calls.count() > 1);
 
@@ -509,7 +543,7 @@ describe("Colors", function () {
     return describe("when an array of expressions is passed", () =>
       it("updates the project variables when consumed", async function () {
         let previousVariablesCount = null;
-        lumine.config.set("colors.delayBeforeScan", 0);
+        lumine.config.set("color-inline.delayBeforeScan", 0);
 
         // This used to wait for the count to hit 45 and then 6 -- two totals
         // measured while the rescan was still evicting the sass and styl
@@ -518,7 +552,7 @@ describe("Colors", function () {
         // it has to see the rescan start first, or two reads taken before it
         // begins look just as settled as two taken after it finishes.
         const beforeChange = project.getVariables().length;
-        lumine.config.set("colors.sourceNames", ["**/*.txt"]);
+        lumine.config.set("color-inline.sourceNames", ["**/*.txt"]);
         await conditionPromise(() => project.getVariables().length !== beforeChange);
 
         const baseline = await settledVariableCount();

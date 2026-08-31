@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { runs, waitsFor, waitsForPromise, waitsForQuiet } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -39,12 +39,12 @@ describe("ColorBuffer", function () {
 
   beforeEach(async function () {
     registerViewProvider();
-    lumine.config.set("colors.delayBeforeScan", 0);
-    lumine.config.set("colors.ignoredBufferNames", []);
-    lumine.config.set("colors.filetypesForColorWords", ["*"]);
-    lumine.config.set("colors.sourceNames", ["*.styl", "*.less"]);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
+    lumine.config.set("color-inline.ignoredBufferNames", []);
+    lumine.config.set("color-inline.filetypesForColorWords", ["*"]);
+    lumine.config.set("color-inline.sourceNames", ["*.styl", "*.less"]);
 
-    lumine.config.set("colors.ignoredNames", ["project/vendor/**"]);
+    lumine.config.set("color-inline.ignoredNames", ["project/vendor/**"]);
 
     await waitsForPromise(() =>
       lumine.workspace.open("four-variables.styl").then((o) => (editor = o)),
@@ -52,7 +52,7 @@ describe("ColorBuffer", function () {
 
     await waitsForPromise(() =>
       lumine.packages
-        .activatePackage("colors")
+        .activatePackage("color-inline")
         .then(function (pkg) {
           colors = pkg.mainModule;
           return (project = colors.getProject());
@@ -71,7 +71,7 @@ describe("ColorBuffer", function () {
       registerViewProvider();
       expect(project.hasColorBufferForEditor(editor)).toBeTruthy();
 
-      return lumine.config.set("colors.ignoredBufferNames", ["**/*.styl"]);
+      return lumine.config.set("color-inline.ignoredBufferNames", ["**/*.styl"]);
     });
 
     it("destroys the color buffer for this file", async () =>
@@ -80,7 +80,7 @@ describe("ColorBuffer", function () {
     it("recreates the color buffer when the settings no longer ignore the file", async function () {
       expect(project.hasColorBufferForEditor(editor)).toBeFalsy();
 
-      lumine.config.set("colors.ignoredBufferNames", []);
+      lumine.config.set("color-inline.ignoredBufferNames", []);
 
       return expect(project.hasColorBufferForEditor(editor)).toBeTruthy();
     });
@@ -302,7 +302,7 @@ describe("ColorBuffer", function () {
       });
 
       return it("clears the scan scheduled by the last edit", async function () {
-        lumine.config.set("colors.delayBeforeScan", 300);
+        lumine.config.set("color-inline.delayBeforeScan", 300);
         spyOn(colorBuffer, "update").and.callThrough();
 
         editor.insertText(" ");
@@ -602,7 +602,7 @@ describe("ColorBuffer", function () {
     beforeEach(async function () {
       registerViewProvider();
       project.setIgnoredNames([]);
-      lumine.config.set("colors.ignoredNames", ["project/vendor/*"]);
+      lumine.config.set("color-inline.ignoredNames", ["project/vendor/*"]);
 
       await waitsForPromise(() =>
         lumine.workspace.open("project/vendor/css/variables.less").then((o) => (editor = o)),

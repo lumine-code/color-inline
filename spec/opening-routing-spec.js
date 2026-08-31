@@ -1,7 +1,7 @@
 const main = require("../lib/main");
 const uris = require("../lib/uris");
 
-describe("colors workspace views", () => {
+describe("color-inline workspace views", () => {
   let previousProject;
 
   beforeEach(() => {

@@ -1,4 +1,4 @@
-﻿.absolute-box {
+.absolute-box {
   display: block;
   position: absolute;
   width: 100%;
@@ -11,22 +11,22 @@
   box-sizing: border-box;
 }
 
-.icon-colors::before {
+.icon-color-inline::before {
   content: "";
   width: 1em;
   height: 1em;
   display: inline-block;
-  background-image: url(atom://colors/resources/icon.svg);
+  background-image: url(lumine://color-inline/resources/icon.svg);
   background-size: 1em;
   vertical-align: middle;
 }
 
-.icon[data-name=".colors"]::before {
+.icon[data-name=".color-inline"]::before {
   content: "";
   width: 1em;
   height: 1em;
   display: inline-block;
-  background-image: url(atom://colors/resources/icon.svg);
+  background-image: url(lumine://color-inline/resources/icon.svg);
   background-size: 1em;
   margin-top: 0.2em;
 }
@@ -43,18 +43,18 @@ lumine-panel-container.footer {
 }
 
 lumine-text-editor {
-  .colors-background {
+  .color-inline-background {
     position: relative;
     box-sizing: border-box;
   }
 
-  .colors-background-in-selection {
+  .color-inline-background-in-selection {
     background: transparent !important;
     color: inherit !important;
   }
 
-  .colors-underline .region,
-  .colors-underline-in-selection .region {
+  .color-inline-underline .region,
+  .color-inline-underline-in-selection .region {
     position: absolute;
     white-space: nowrap;
     box-sizing: border-box;
@@ -63,8 +63,8 @@ lumine-text-editor {
     margin-top: 1.3em; /* adjust to your liking */
   }
 
-  .colors-outline .region,
-  .colors-outline-in-selection .region {
+  .color-inline-outline .region,
+  .color-inline-outline-in-selection .region {
     position: absolute;
     white-space: nowrap;
     margin-left: -1px;
@@ -114,8 +114,8 @@ lumine-text-editor {
     }
   }
 
-  .gutter .colors-gutter-marker div,
-  .gutter .colors-gutter-marker-in-selection div {
+  .gutter .color-inline-gutter-marker div,
+  .gutter .color-inline-gutter-marker-in-selection div {
     display: flex;
     align-items: center;
     padding: 0 0 0 2px;
@@ -133,33 +133,33 @@ lumine-text-editor {
     }
   }
 
-  .gutter .colors-gutter-marker-in-selection div span::after {
+  .gutter .color-inline-gutter-marker-in-selection div span::after {
     border: 1px solid var(--text-color-highlight);
   }
 
-  .gutter[gutter-name="colors-dot"],
-  .gutter[gutter-name="colors-square-dot"] {
+  .gutter[gutter-name="color-inline-dot"],
+  .gutter[gutter-name="color-inline-square-dot"] {
     overflow: visible;
     z-index: 2;
     min-width: 0;
 
-    .colors-gutter-marker div span,
-    .colors-gutter-marker-in-selection div span {
+    .color-inline-gutter-marker div span,
+    .color-inline-gutter-marker-in-selection div span {
       width: 12px;
       height: 12px;
       transform: translate(100%, 0);
     }
   }
 
-  .gutter[gutter-name="colors-dot"] .colors-gutter-marker div,
-  .gutter[gutter-name="colors-dot"] .colors-gutter-marker-in-selection div {
+  .gutter[gutter-name="color-inline-dot"] .color-inline-gutter-marker div,
+  .gutter[gutter-name="color-inline-dot"] .color-inline-gutter-marker-in-selection div {
     span {
       border-radius: 50%;
     }
   }
 
-  colors-markers,
-  colors-markers {
+  color-inline-markers,
+  color-inline-markers {
     position: relative;
     display: block;
     z-index: 1;
@@ -169,9 +169,9 @@ lumine-text-editor {
     }
   }
 
-  colors-markers colors-color-marker,
-  colors-markers colors-color-marker,
-  colors-color-marker {
+  color-inline-markers color-inline-color-marker,
+  color-inline-markers color-inline-color-marker,
+  color-inline-color-marker {
     display: block;
     position: absolute;
 
@@ -260,7 +260,7 @@ lumine-text-editor {
 
       &:before {
         content: "";
-        background: url(atom://colors/resources/transparent-background.png);
+        background: url(lumine://color-inline/resources/transparent-background.png);
         background-size: 100%;
         border-radius: inherit;
         display: block;
@@ -315,7 +315,7 @@ lumine-text-editor {
 /*          ## ##       ######### ##   ##   ##       ##     ## */
 /*    ##    ## ##       ##     ## ##    ##  ##    ## ##     ## */
 /*     ######  ######## ##     ## ##     ##  ######  ##     ## */
-colors-color-results {
+color-inline-color-results {
   display: block;
   width: 100%;
 
@@ -377,7 +377,7 @@ colors-color-results {
 /*    ##    ##  ##     ## ######### ##   ##   ##     ## */
 /*    ##    ##  ##     ## ##     ## ##    ##  ##     ## */
 /*     ######    #######  ##     ## ##     ## ######## */
-colors-sources-popup {
+color-inline-sources-popup {
   .inset-panel {
     margin-bottom: 0.75em;
   }
@@ -390,13 +390,13 @@ colors-sources-popup {
 /*    ##        ######### ##       ##          ##       ##    ## */
 /*    ##        ##     ## ##       ##          ##       ##    ## */
 /*    ##        ##     ## ######## ########    ##       ##    ######## */
-colors-palette {
+color-inline-palette {
   background: var(--syntax-background-color);
   color: var(--text-color);
   font-size: 1.2em;
 
-  .colors-palette-list,
-  .colors-palette-controls {
+  .color-inline-palette-list,
+  .color-inline-palette-controls {
     display: -webkit-flex;
     position: relative;
     width: 100%;
@@ -422,7 +422,7 @@ colors-palette {
     display: -webkit-flex;
     -webkit-flex-direction: row;
 
-    &.colors-color-group {
+    &.color-inline-color-group {
       padding: 0;
       border-bottom: none;
       -webkit-flex-direction: column;
@@ -443,17 +443,17 @@ colors-palette {
     color: var(--text-color-subtle);
   }
 
-  .colors-color-group .path {
+  .color-inline-color-group .path {
     display: none;
   }
 
-  .colors-color-group-header {
+  .color-inline-color-group-header {
     position: sticky;
     top: 0;
     z-index: 10;
   }
 
-  .colors-color-group-header-content {
+  .color-inline-color-group-header-content {
     border-bottom: 1px solid var(--base-border-color);
     display: inline-block;
     background: var(--syntax-background-color);
@@ -462,26 +462,26 @@ colors-palette {
     width: 100%;
   }
 
-  .colors-palette-list {
+  .color-inline-palette-list {
     overflow-y: auto;
     background: var(--tool-panel-background-color);
   }
 
-  .colors-color,
-  .colors-color-details {
+  .color-inline-color,
+  .color-inline-color-details {
     display: -webkit-flex;
   }
 
-  .colors-color-details {
+  .color-inline-color-details {
     -webkit-flex-flow: column;
     -webkit-flex: 1;
   }
 
-  .colors-color {
+  .color-inline-color {
     -webkit-flex-flow: row;
   }
 
-  .colors-color-properties {
+  .color-inline-color-properties {
     width: 8em;
 
     span {
@@ -496,7 +496,7 @@ colors-palette {
     }
   }
 
-  .colors-color-preview {
+  .color-inline-color-preview {
     box-sizing: border-box;
     position: relative;
     width: 3em;
@@ -533,7 +533,7 @@ colors-palette {
     font-size: 0.8em;
   }
 
-  .colors-palette-panel {
+  .color-inline-palette-panel {
     display: -webkit-flex;
     position: absolute;
     top: 0;
@@ -543,11 +543,11 @@ colors-palette {
     -webkit-flex-flow: column;
   }
 
-  .colors-palette-controls {
+  .color-inline-palette-controls {
     min-height: -webkit-min-content;
   }
 
-  .colors-palette-controls-wrapper {
+  .color-inline-palette-controls-wrapper {
     border-bottom: 1px solid var(--base-border-color);
     padding: var(--component-padding);
     width: 100%;
@@ -565,7 +565,7 @@ colors-palette {
 /*          ## ##          ##       ##     ##  ##  #### ##    ##        ## */
 /*    ##    ## ##          ##       ##     ##  ##   ### ##    ##  ##    ## */
 /*     ######  ########    ##       ##    #### ##    ##  ######    ###### */
-colors-color-project {
+color-inline-color-project {
   color: var(--text-color);
   position: relative;
 

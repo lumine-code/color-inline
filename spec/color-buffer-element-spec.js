@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -52,7 +52,7 @@ describe("ColorBufferElement", function () {
   };
 
   const getEditorDecorations = (_type) =>
-    editor.getDecorations().filter((d) => d.properties.class.startsWith("colors-background"));
+    editor.getDecorations().filter((d) => d.properties.class.startsWith("color-inline-background"));
 
   beforeEach(async function () {
     registerViewProvider();
@@ -66,8 +66,8 @@ describe("ColorBufferElement", function () {
     lumine.config.set("editor.softWrapAtPreferredLineLength", true);
     lumine.config.set("editor.preferredLineLength", 40);
 
-    lumine.config.set("colors.delayBeforeScan", 0);
-    lumine.config.set("colors.sourceNames", ["*.styl", "*.less"]);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
+    lumine.config.set("color-inline.sourceNames", ["*.styl", "*.less"]);
 
     await waitsForPromise(() =>
       lumine.workspace.open("four-variables.styl").then(function (o) {
@@ -77,7 +77,7 @@ describe("ColorBufferElement", function () {
     );
 
     await waitsForPromise(() =>
-      lumine.packages.activatePackage("colors").then(function (pkg) {
+      lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
         return (project = colors.getProject());
       }),
@@ -101,7 +101,7 @@ describe("ColorBufferElement", function () {
 
     it("attaches itself in the target text editor element", async function () {
       expect(colorBufferElement.parentNode).toExist();
-      return expect(editorElement.querySelector(".lines colors-markers")).toExist();
+      return expect(editorElement.querySelector(".lines color-inline-markers")).toExist();
     });
 
     describe("when the color buffer is initialized", function () {
@@ -228,7 +228,7 @@ describe("ColorBufferElement", function () {
 
           return editors.forEach(function (editor) {
             editorElement = lumine.views.getView(editor);
-            colorBufferElement = editorElement.querySelector("colors-markers");
+            colorBufferElement = editorElement.querySelector("color-inline-markers");
             expect(colorBufferElement).toExist();
 
             return expect(getEditorDecorations("background").length).toEqual(4);
@@ -239,7 +239,7 @@ describe("ColorBufferElement", function () {
       describe("when the marker type is set to dot", function () {
         beforeEach(async function () {
           await waitsForPromise(() => colorBuffer.initialize());
-          lumine.config.set("colors.markerType", "dot");
+          lumine.config.set("color-inline.markerType", "dot");
         });
 
         it("does no offset work for a vertical scroll", async function () {
@@ -266,7 +266,7 @@ describe("ColorBufferElement", function () {
           spyOn(colorBufferElement, "updateDotDecorationsOffsets").and.callThrough();
 
           editorElement.emitter.emit("did-change-scroll-left", 10);
-          lumine.config.set("colors.markerType", "background");
+          lumine.config.set("color-inline.markerType", "background");
           await new Promise((resolve) => requestAnimationFrame(resolve));
 
           expect(colorBufferElement.updateDotDecorationsOffsets).not.toHaveBeenCalled();
@@ -281,13 +281,15 @@ describe("ColorBufferElement", function () {
           registerViewProvider();
           await waitsForPromise(() => colorBuffer.initialize());
           await runs(async function () {
-            lumine.config.set("colors.markerType", "gutter");
-            return (gutter = editorElement.querySelector('[gutter-name="colors-gutter"]'));
+            lumine.config.set("color-inline.markerType", "gutter");
+            return (gutter = editorElement.querySelector('[gutter-name="color-inline-gutter"]'));
           });
         });
 
         it("removes the markers", async () =>
-          expect(colorBufferElement.querySelectorAll("colors-color-marker").length).toEqual(0));
+          expect(colorBufferElement.querySelectorAll("color-inline-color-marker").length).toEqual(
+            0,
+          ));
 
         it("adds a custom gutter to the text editor", async () => expect(gutter).toExist());
 
@@ -334,9 +336,8 @@ describe("ColorBufferElement", function () {
             return describe("clicking on a gutter decoration", function () {
               beforeEach(async function () {
                 registerViewProvider();
-                project.colorPickerAPI = { open: jasmine.createSpy("color-picker.open") };
 
-                const decoration = editorElement.querySelector(".colors-gutter-marker span");
+                const decoration = editorElement.querySelector(".color-inline-gutter-marker span");
                 return mousedown(decoration);
               });
 
@@ -346,17 +347,19 @@ describe("ColorBufferElement", function () {
                   [0, 17],
                 ]));
 
-              return it("opens the color picker", async () =>
-                expect(project.colorPickerAPI.open).toHaveBeenCalled());
+              return it("selects exactly the marker content", async () =>
+                expect(editor.getSelectedText()).toEqual("#fff"));
             });
           });
         });
 
         describe("when the marker is changed again", function () {
-          beforeEach(async () => lumine.config.set("colors.markerType", "background"));
+          beforeEach(async () => lumine.config.set("color-inline.markerType", "background"));
 
           it("removes the gutter", async () =>
-            expect(editorElement.querySelector('[gutter-name="colors-gutter"]')).not.toExist());
+            expect(
+              editorElement.querySelector('[gutter-name="color-inline-gutter"]'),
+            ).not.toExist());
 
           return it("recreates the markers", async () =>
             expect(getEditorDecorations("background").length).toEqual(3));
@@ -378,7 +381,7 @@ describe("ColorBufferElement", function () {
             await waitsForPromise(() => colorBuffer.variablesAvailable());
 
             await runs(
-              () => (gutter = editorElement.querySelector('[gutter-name="colors-gutter"]')),
+              () => (gutter = editorElement.querySelector('[gutter-name="color-inline-gutter"]')),
             );
           });
 
@@ -411,7 +414,7 @@ describe("ColorBufferElement", function () {
         expect(getEditorDecorations("background").length).toEqual(3));
     });
 
-    describe("when colors.supportedFiletypes settings is defined", function () {
+    describe("when color-inline.supportedFiletypes settings is defined", function () {
       const loadBuffer = async function (filePath) {
         await waitsForPromise(() =>
           lumine.workspace.open(filePath).then(function (o) {
@@ -434,7 +437,7 @@ describe("ColorBufferElement", function () {
       });
 
       describe("with the default wildcard", function () {
-        beforeEach(async () => lumine.config.set("colors.supportedFiletypes", ["*"]));
+        beforeEach(async () => lumine.config.set("color-inline.supportedFiletypes", ["*"]));
 
         return it("supports every filetype", async function () {
           await loadBuffer("scope-filter.coffee");
@@ -446,7 +449,7 @@ describe("ColorBufferElement", function () {
       });
 
       describe("with a filetype", function () {
-        beforeEach(async () => lumine.config.set("colors.supportedFiletypes", ["coffee"]));
+        beforeEach(async () => lumine.config.set("color-inline.supportedFiletypes", ["coffee"]));
 
         return it("supports the specified file type", async function () {
           await loadBuffer("scope-filter.coffee");
@@ -460,7 +463,7 @@ describe("ColorBufferElement", function () {
       return describe("with many filetypes", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.supportedFiletypes", ["coffee"]);
+          lumine.config.set("color-inline.supportedFiletypes", ["coffee"]);
           return project.setSupportedFiletypes(["less"]);
         });
 
@@ -478,7 +481,7 @@ describe("ColorBufferElement", function () {
         return describe("with global file types ignored", function () {
           beforeEach(async function () {
             registerViewProvider();
-            lumine.config.set("colors.supportedFiletypes", ["coffee"]);
+            lumine.config.set("color-inline.supportedFiletypes", ["coffee"]);
             project.setIgnoreGlobalSupportedFiletypes(true);
             return project.setSupportedFiletypes(["less"]);
           });
@@ -497,7 +500,7 @@ describe("ColorBufferElement", function () {
       });
     });
 
-    return describe("when colors.ignoredScopes settings is defined", function () {
+    return describe("when color-inline.ignoredScopes settings is defined", function () {
       beforeEach(async function () {
         registerViewProvider();
         await waitsForPromise(() => lumine.packages.activatePackage("language-coffee-script"));
@@ -516,7 +519,7 @@ describe("ColorBufferElement", function () {
       });
 
       describe("with one filter", function () {
-        beforeEach(async () => lumine.config.set("colors.ignoredScopes", ["\\.comment"]));
+        beforeEach(async () => lumine.config.set("color-inline.ignoredScopes", ["\\.comment"]));
 
         return it("ignores the colors that matches the defined scopes", async () =>
           expect(getEditorDecorations("background").length).toEqual(1));
@@ -524,7 +527,7 @@ describe("ColorBufferElement", function () {
 
       describe("with two filters", function () {
         beforeEach(async () =>
-          lumine.config.set("colors.ignoredScopes", ["\\.string", "\\.comment"]),
+          lumine.config.set("color-inline.ignoredScopes", ["\\.string", "\\.comment"]),
         );
 
         return it("ignores the colors that matches the defined scopes", async () =>
@@ -532,7 +535,7 @@ describe("ColorBufferElement", function () {
       });
 
       describe("with an invalid filter", function () {
-        beforeEach(async () => lumine.config.set("colors.ignoredScopes", ["\\"]));
+        beforeEach(async () => lumine.config.set("color-inline.ignoredScopes", ["\\"]));
 
         return it("ignores the filter", async () =>
           expect(getEditorDecorations("background").length).toEqual(2));
@@ -541,7 +544,7 @@ describe("ColorBufferElement", function () {
       return describe("when the project ignoredScopes is defined", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.ignoredScopes", ["\\.string"]);
+          lumine.config.set("color-inline.ignoredScopes", ["\\.string"]);
           return project.setIgnoredScopes(["\\.comment"]);
         });
 
@@ -653,7 +656,7 @@ describe("ColorBufferElement decoration styles", function () {
       element.decorationByMarkerId = Object.fromEntries(
         items.map((item, index) => [index + 1, { getProperties: () => ({ item }) }]),
       );
-      lumine.config.set("colors.maxDecorationsInGutter", 100);
+      lumine.config.set("color-inline.maxDecorationsInGutter", 100);
 
       expect(element.updateDotDecorationsOffsets(0, 20)).toBe(3);
       expect(

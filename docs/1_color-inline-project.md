@@ -1,13 +1,13 @@
-# colors.project
+# color-inline.project
 
 Read access to the scanned colour project: its palette, its variables, and the colour buffers attached to open editors.
 
 |             |                                              |
 | ----------- | -------------------------------------------- |
 | Version     | `1.0.0`                                      |
-| Provided by | `colors`                                     |
+| Provided by | `color-inline`                               |
 | Consumed by | any package that wants the project's colours |
-| Owner       | `colors`                                     |
+| Owner       | `color-inline`                               |
 
 ## Registration
 
@@ -15,9 +15,9 @@ Consume it from your `package.json`:
 
 ```json
 "consumedServices": {
-  "colors.project": {
+  "color-inline.project": {
     "versions": {
-      "^1.0.0": "consumeColorsProject"
+      "^1.0.0": "consumeColorInlineProject"
     }
   }
 }
@@ -43,10 +43,10 @@ A variable carries at least `name`, `value`, `path`, `line` and `isColor`; a col
 
 ```js
 module.exports = {
-  consumeColorsProject(colors) {
-    this.colors = colors;
+  consumeColorInlineProject(colorInline) {
+    this.colorInline = colorInline;
 
-    return colors.observeColorBuffers((colorBuffer) => {
+    return colorInline.observeColorBuffers((colorBuffer) => {
       console.log(colorBuffer.editor.getPath(), colorBuffer.getColorMarkers().length);
     });
   },
@@ -59,7 +59,7 @@ The project scans lazily. `getVariables()` answers with what has been found so f
 
 ## Teardown
 
-`observeColorBuffers` returns a `Disposable`, and whatever your consume method returns is disposed when `colors` deactivates. Hold no reference to a colour buffer past its `onDidDestroy`.
+`observeColorBuffers` returns a `Disposable`, and whatever your consume method returns is disposed when `color-inline` deactivates. Hold no reference to a colour buffer past its `onDidDestroy`.
 
 ## Versioning
 

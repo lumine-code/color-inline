@@ -27,7 +27,7 @@ function registerViewProvider() {
     lumine.deserializers.add({ name, deserialize: (state) => Klass.deserialize(state) });
   }
 
-  return lumine.views.addViewProvider((model) => main.colorsViewProvider(model));
+  return lumine.views.addViewProvider((model) => main.colorInlineViewProvider(model));
 }
 
 module.exports = { registerViewProvider };

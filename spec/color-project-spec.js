@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { runs, waitsFor, waitsForPromise, waitsForQuiet } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -50,9 +50,9 @@ describe("ColorProject", function () {
 
   beforeEach(async function () {
     registerViewProvider();
-    lumine.config.set("colors.sourceNames", ["*.styl"]);
-    lumine.config.set("colors.ignoredNames", []);
-    lumine.config.set("colors.filetypesForColorWords", ["*"]);
+    lumine.config.set("color-inline.sourceNames", ["*.styl"]);
+    lumine.config.set("color-inline.ignoredNames", []);
+    lumine.config.set("color-inline.filetypesForColorWords", ["*"]);
 
     const [fixturesPath] = Array.from(lumine.project.getPaths());
     rootPath = path.join(fixturesPath, "project");
@@ -236,7 +236,7 @@ describe("ColorProject", function () {
   describe("when the project has no variables source files", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.config.set("colors.sourceNames", ["*.sass"]);
+      lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 
       const [fixturesPath] = Array.from(lumine.project.getPaths());
       rootPath = `${fixturesPath}-no-sources`;
@@ -257,7 +257,7 @@ describe("ColorProject", function () {
   describe("when the project has custom source names defined", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.config.set("colors.sourceNames", ["*.sass"]);
+      lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 
       const [_fixturesPath] = Array.from(lumine.project.getPaths());
 
@@ -278,7 +278,7 @@ describe("ColorProject", function () {
   describe("when the project has looping variable definition", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.config.set("colors.sourceNames", ["*.sass"]);
+      lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 
       const [fixturesPath] = Array.from(lumine.project.getPaths());
       rootPath = `${fixturesPath}-with-recursion`;
@@ -723,7 +723,7 @@ describe("ColorProject", function () {
     describe("when the project has multiple root directory", function () {
       beforeEach(async function () {
         registerViewProvider();
-        lumine.config.set("colors.sourceNames", ["**/*.sass", "**/*.styl"]);
+        lumine.config.set("color-inline.sourceNames", ["**/*.sass", "**/*.styl"]);
 
         const [fixturesPath] = Array.from(lumine.project.getPaths());
         lumine.project.setPaths([`${fixturesPath}`, `${fixturesPath}-with-recursion`]);
@@ -741,11 +741,11 @@ describe("ColorProject", function () {
       let [projectPath] = Array.from([]);
       beforeEach(async function () {
         registerViewProvider();
-        lumine.config.set("colors.sourceNames", ["*.sass"]);
+        lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 
         const fixture = path.join(__dirname, "fixtures", "project-with-gitignore");
 
-        projectPath = fs.mkdtempSync(path.join(os.tmpdir(), "colors-project"));
+        projectPath = fs.mkdtempSync(path.join(os.tmpdir(), "color-inline-project"));
         const dotGitFixture = path.join(fixture, "git.git");
         const dotGit = path.join(projectPath, ".git");
         fs.cpSync(dotGitFixture, dotGit, { recursive: true });
@@ -775,7 +775,7 @@ describe("ColorProject", function () {
       describe("when the ignoreVcsIgnoredPaths setting is enabled", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.ignoreVcsIgnoredPaths", true);
+          lumine.config.set("color-inline.ignoreVcsIgnoredPaths", true);
           project = new ColorProject({});
 
           await waitsForPromise(() => project.initialize());
@@ -791,7 +791,7 @@ describe("ColorProject", function () {
             registerViewProvider();
             const spy = jasmine.createSpy("did-update-variables");
             project.onDidUpdateVariables(spy);
-            lumine.config.set("colors.ignoreVcsIgnoredPaths", false);
+            lumine.config.set("color-inline.ignoreVcsIgnoredPaths", false);
 
             await waitsFor(() => spy.calls.count() > 0);
           });
@@ -806,7 +806,7 @@ describe("ColorProject", function () {
       return describe("when the ignoreVcsIgnoredPaths setting is disabled", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.ignoreVcsIgnoredPaths", false);
+          lumine.config.set("color-inline.ignoreVcsIgnoredPaths", false);
           project = new ColorProject({});
 
           await waitsForPromise(() => project.initialize());
@@ -822,7 +822,7 @@ describe("ColorProject", function () {
             registerViewProvider();
             const spy = jasmine.createSpy("did-update-variables");
             project.onDidUpdateVariables(spy);
-            lumine.config.set("colors.ignoreVcsIgnoredPaths", true);
+            lumine.config.set("color-inline.ignoreVcsIgnoredPaths", true);
 
             await waitsFor(() => spy.calls.count() > 0);
           });
@@ -849,7 +849,7 @@ describe("ColorProject", function () {
       beforeEach(async function () {
         registerViewProvider();
         const originalPaths = project.getPaths();
-        lumine.config.set("colors.sourceNames", []);
+        lumine.config.set("color-inline.sourceNames", []);
 
         await waitsFor(() => project.getPaths().join(",") !== originalPaths.join(","));
       });
@@ -865,7 +865,7 @@ describe("ColorProject", function () {
           const originalPaths = project.getPaths();
           project.onDidUpdateVariables(updateSpy);
 
-          lumine.config.set("colors.sourceNames", ["**/*.styl"]);
+          lumine.config.set("color-inline.sourceNames", ["**/*.styl"]);
 
           await waitsFor(() => project.getPaths().join(",") !== originalPaths.join(","));
           await waitsFor(() => updateSpy.calls.count() > 0);
@@ -882,7 +882,7 @@ describe("ColorProject", function () {
       beforeEach(async function () {
         registerViewProvider();
         const originalPaths = project.getPaths();
-        lumine.config.set("colors.ignoredNames", ["**/*.styl"]);
+        lumine.config.set("color-inline.ignoredNames", ["**/*.styl"]);
 
         await waitsFor(() => project.getPaths().join(",") !== originalPaths.join(","));
       });
@@ -898,7 +898,7 @@ describe("ColorProject", function () {
           const originalPaths = project.getPaths();
           project.onDidUpdateVariables(updateSpy);
 
-          lumine.config.set("colors.ignoredNames", []);
+          lumine.config.set("color-inline.ignoredNames", []);
 
           await waitsFor(() => project.getPaths().join(",") !== originalPaths.join(","));
           await waitsFor(() => updateSpy.calls.count() > 0);
@@ -930,7 +930,7 @@ describe("ColorProject", function () {
         });
 
         it("ignores the content of the global config", async () =>
-          expect(project.getSourceNames()).toEqual([".colors", "*.foo"]));
+          expect(project.getSourceNames()).toEqual([".color-inline", "*.foo"]));
 
         return it("serializes the project setting", async () =>
           expect(project.serialize().ignoreGlobalSourceNames).toBeTruthy());
@@ -939,7 +939,7 @@ describe("ColorProject", function () {
       describe("for the ignoredNames field", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.ignoredNames", ["*.foo"]);
+          lumine.config.set("color-inline.ignoredNames", ["*.foo"]);
           project.ignoredNames = ["*.bar"];
 
           return project.setIgnoreGlobalIgnoredNames(true);
@@ -955,7 +955,7 @@ describe("ColorProject", function () {
       describe("for the ignoredScopes field", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.ignoredScopes", ["\\.comment"]);
+          lumine.config.set("color-inline.ignoredScopes", ["\\.comment"]);
           project.ignoredScopes = ["\\.source"];
 
           return project.setIgnoreGlobalIgnoredScopes(true);
@@ -971,7 +971,7 @@ describe("ColorProject", function () {
       return describe("for the searchNames field", function () {
         beforeEach(async function () {
           registerViewProvider();
-          lumine.config.set("colors.extendedSearchNames", ["*.css"]);
+          lumine.config.set("color-inline.extendedSearchNames", ["*.css"]);
           project.searchNames = ["*.foo"];
 
           return project.setIgnoreGlobalSearchNames(true);
@@ -994,7 +994,7 @@ describe("ColorProject", function () {
 
         await waitsForPromise(() => lumine.themes.activateThemes());
 
-        await waitsForPromise(() => lumine.packages.activatePackage("colors"));
+        await waitsForPromise(() => lumine.packages.activatePackage("color-inline"));
       });
 
       afterEach(async function () {
@@ -1021,7 +1021,7 @@ describe("ColorProject", function () {
 
         await waitsForPromise(() => lumine.themes.activateThemes());
 
-        await waitsForPromise(() => lumine.packages.activatePackage("colors"));
+        await waitsForPromise(() => lumine.packages.activatePackage("color-inline"));
 
         await waitsForPromise(() => project.initialize());
 
@@ -1171,7 +1171,7 @@ describe("ColorProject", function () {
     describe("with a sourceNames setting value different than when serialized", function () {
       beforeEach(async function () {
         registerViewProvider();
-        lumine.config.set("colors.sourceNames", []);
+        lumine.config.set("color-inline.sourceNames", []);
 
         project = createProject({
           stateFixture: "empty-project.json",
@@ -1311,10 +1311,10 @@ describe("ColorProject", function () {
 
 describe("ColorProject", function () {
   let [project, rootPath] = Array.from([]);
-  return describe("when the project has a colors defaults file", function () {
+  return describe("when the project has a color-inline defaults file", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.config.set("colors.sourceNames", ["*.sass"]);
+      lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 
       const [fixturesPath] = Array.from(lumine.project.getPaths());
       rootPath = `${fixturesPath}/project-with-defaults`;

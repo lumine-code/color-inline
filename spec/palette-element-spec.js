@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -42,11 +42,11 @@ describe("PaletteElement", function () {
     registerViewProvider();
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
-    lumine.config.set("colors.delayBeforeScan", 0);
-    lumine.config.set("colors.sourceNames", ["*.styl", "*.less"]);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
+    lumine.config.set("color-inline.sourceNames", ["*.styl", "*.less"]);
 
     await waitsForPromise(() =>
-      lumine.packages.activatePackage("colors").then(function (pkg) {
+      lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
         return (project = colors.getProject());
       }),
@@ -84,12 +84,14 @@ describe("PaletteElement", function () {
       ).not.toExist());
   });
 
-  describe("when colors:show-palette commands is triggered", function () {
+  describe("when color-inline:show-palette command is triggered", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.commands.dispatch(workspaceElement, "colors:show-palette");
+      lumine.commands.dispatch(workspaceElement, "color-inline:show-palette");
 
-      await waitsFor(() => (paletteElement = workspaceElement.querySelector("colors-palette")));
+      await waitsFor(
+        () => (paletteElement = workspaceElement.querySelector("color-inline-palette")),
+      );
 
       await runs(async function () {
         palette = paletteElement.getModel();
@@ -127,7 +129,7 @@ describe("PaletteElement", function () {
       }));
 
     describe("when the sortPaletteColors settings is set to color", function () {
-      beforeEach(async () => lumine.config.set("colors.sortPaletteColors", "by color"));
+      beforeEach(async () => lumine.config.set("color-inline.sortPaletteColors", "by color"));
 
       return it("reorders the colors", async function () {
         const sortedColors = project
@@ -148,7 +150,7 @@ describe("PaletteElement", function () {
     });
 
     describe("when the sortPaletteColors settings is set to name", function () {
-      beforeEach(async () => lumine.config.set("colors.sortPaletteColors", "by name"));
+      beforeEach(async () => lumine.config.set("color-inline.sortPaletteColors", "by name"));
 
       return it("reorders the colors", async function () {
         const sortedColors = project
@@ -169,7 +171,7 @@ describe("PaletteElement", function () {
     });
 
     describe("when the groupPaletteColors setting is set to file", function () {
-      beforeEach(async () => lumine.config.set("colors.groupPaletteColors", "by file"));
+      beforeEach(async () => lumine.config.set("color-inline.groupPaletteColors", "by file"));
 
       it("renders the list with sublists for each files", async function () {
         const files = colorsByFile().size;
@@ -180,12 +182,12 @@ describe("PaletteElement", function () {
       });
 
       it("adds a header with the file path for each sublist", async function () {
-        const ols = paletteElement.querySelectorAll(".colors-color-group-header");
+        const ols = paletteElement.querySelectorAll(".color-inline-color-group-header");
         return expect(ols.length).toEqual(colorsByFile().size);
       });
 
       it("keeps group headers sticky without a scroll handler", async function () {
-        const header = paletteElement.querySelector(".colors-color-group-header");
+        const header = paletteElement.querySelector(".color-inline-color-group-header");
         const style = getComputedStyle(header);
 
         expect(style.position).toBe("sticky");
@@ -194,11 +196,11 @@ describe("PaletteElement", function () {
       });
 
       describe("and the sortPaletteColors is set to name", function () {
-        beforeEach(async () => lumine.config.set("colors.sortPaletteColors", "by name"));
+        beforeEach(async () => lumine.config.set("color-inline.sortPaletteColors", "by name"));
 
         return it("sorts the nested list items", async function () {
           const palettes = paletteElement.getFilesPalettes();
-          const ols = paletteElement.querySelectorAll(".colors-color-group");
+          const ols = paletteElement.querySelectorAll(".color-inline-color-group");
           let n = 0;
 
           return (() => {
@@ -226,7 +228,7 @@ describe("PaletteElement", function () {
       });
 
       return describe("when the mergeColorDuplicates", function () {
-        beforeEach(async () => lumine.config.set("colors.mergeColorDuplicates", true));
+        beforeEach(async () => lumine.config.set("color-inline.mergeColorDuplicates", true));
 
         return it("groups identical colors together", async function () {
           const byFile = colorsByFile();
@@ -253,7 +255,7 @@ describe("PaletteElement", function () {
         });
 
         return it("changes the settings value", async () =>
-          expect(lumine.config.get("colors.sortPaletteColors")).toEqual("by name"));
+          expect(lumine.config.get("color-inline.sortPaletteColors")).toEqual("by name"));
       });
     });
 
@@ -270,7 +272,7 @@ describe("PaletteElement", function () {
         });
 
         return it("changes the settings value", async () =>
-          expect(lumine.config.get("colors.groupPaletteColors")).toEqual("by file"));
+          expect(lumine.config.get("color-inline.groupPaletteColors")).toEqual("by file"));
       });
     });
   });
@@ -278,17 +280,19 @@ describe("PaletteElement", function () {
   describe("when the palette settings differs from defaults", function () {
     beforeEach(async function () {
       registerViewProvider();
-      lumine.config.set("colors.sortPaletteColors", "by name");
-      lumine.config.set("colors.groupPaletteColors", "by file");
-      return lumine.config.set("colors.mergeColorDuplicates", true);
+      lumine.config.set("color-inline.sortPaletteColors", "by name");
+      lumine.config.set("color-inline.groupPaletteColors", "by file");
+      return lumine.config.set("color-inline.mergeColorDuplicates", true);
     });
 
-    return describe("when colors:show-palette commands is triggered", function () {
+    return describe("when color-inline:show-palette command is triggered", function () {
       beforeEach(async function () {
         registerViewProvider();
-        lumine.commands.dispatch(workspaceElement, "colors:show-palette");
+        lumine.commands.dispatch(workspaceElement, "color-inline:show-palette");
 
-        await waitsFor(() => (paletteElement = workspaceElement.querySelector("colors-palette")));
+        await waitsFor(
+          () => (paletteElement = workspaceElement.querySelector("color-inline-palette")),
+        );
 
         await runs(() => (palette = paletteElement.getModel()));
       });
@@ -316,9 +320,11 @@ describe("PaletteElement", function () {
     let [spy, initialColorCount] = Array.from([]);
     beforeEach(async function () {
       registerViewProvider();
-      lumine.commands.dispatch(workspaceElement, "colors:show-palette");
+      lumine.commands.dispatch(workspaceElement, "color-inline:show-palette");
 
-      await waitsFor(() => (paletteElement = workspaceElement.querySelector("colors-palette")));
+      await waitsFor(
+        () => (paletteElement = workspaceElement.querySelector("color-inline-palette")),
+      );
 
       await runs(async function () {
         palette = paletteElement.getModel();
@@ -327,7 +333,7 @@ describe("PaletteElement", function () {
 
         project.onDidUpdateVariables(spy);
 
-        return lumine.config.set("colors.sourceNames", ["*.styl", "*.less", "*.sass"]);
+        return lumine.config.set("color-inline.sourceNames", ["*.styl", "*.less", "*.sass"]);
       });
 
       await waitsFor(() => spy.calls.count() > 0);

@@ -1,4 +1,4 @@
-﻿const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
+const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
  * DS102: Remove unnecessary code created because of implicit returns
@@ -21,13 +21,13 @@ describe("autocomplete provider", function () {
     await runs(async function () {
       jasmineContent = document.body.querySelector("#jasmine-content");
 
-      lumine.config.set("colors.autocompleteScopes", ["*"]);
-      lumine.config.set("colors.sourceNames", ["**/*.styl", "**/*.less"]);
+      lumine.config.set("color-inline.autocompleteScopes", ["*"]);
+      lumine.config.set("color-inline.sourceNames", ["**/*.styl", "**/*.less"]);
       // The only `@`-prefixed variables in the fixtures are in a LESS file
       // under a `vendor` directory, which the default ignores -- that fixture
       // is what the ignore specs are about. Nothing here is testing the
       // ignores, so they are turned off rather than worked around.
-      lumine.config.set("colors.ignoredNames", []);
+      lumine.config.set("color-inline.ignoredNames", []);
 
       // Set to live completion
       lumine.config.set("autocomplete.enableAutoActivation", true);
@@ -47,7 +47,7 @@ describe("autocomplete provider", function () {
     );
 
     await waitsForPromise("colors activation", () =>
-      lumine.packages.activatePackage("colors").then((pkg) => (colors = pkg.mainModule)),
+      lumine.packages.activatePackage("color-inline").then((pkg) => (colors = pkg.mainModule)),
     );
 
     await runs(async function () {
@@ -150,7 +150,9 @@ describe("autocomplete provider", function () {
     });
 
     return describe("when the extendAutocompleteToColorValue setting is enabled", function () {
-      beforeEach(async () => lumine.config.set("colors.extendAutocompleteToColorValue", true));
+      beforeEach(async () =>
+        lumine.config.set("color-inline.extendAutocompleteToColorValue", true),
+      );
 
       describe("with an opaque color", () =>
         it("displays the color hexadecimal code in the completion item", async function () {
@@ -179,7 +181,9 @@ describe("autocomplete provider", function () {
         }));
 
       describe("when the autocompleteSuggestionsFromValue setting is enabled", function () {
-        beforeEach(async () => lumine.config.set("colors.autocompleteSuggestionsFromValue", true));
+        beforeEach(async () =>
+          lumine.config.set("color-inline.autocompleteSuggestionsFromValue", true),
+        );
 
         it("suggests color variables from hexadecimal values", async function () {
           await runs(async function () {
@@ -267,7 +271,9 @@ describe("autocomplete provider", function () {
         });
 
         return describe("and when extendAutocompleteToVariables is true", function () {
-          beforeEach(async () => lumine.config.set("colors.extendAutocompleteToVariables", true));
+          beforeEach(async () =>
+            lumine.config.set("color-inline.extendAutocompleteToVariables", true),
+          );
 
           return it("returns suggestions for the matching variable value", async function () {
             await runs(async function () {
@@ -333,7 +339,7 @@ describe("autocomplete provider", function () {
 
   describe("writing the name of a non-color variable", () =>
     it("returns suggestions for the matching variable", async function () {
-      lumine.config.set("colors.extendAutocompleteToVariables", false);
+      lumine.config.set("color-inline.extendAutocompleteToVariables", false);
       await runs(async function () {
         expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
@@ -353,7 +359,7 @@ describe("autocomplete provider", function () {
     }));
 
   return describe("when extendAutocompleteToVariables is true", function () {
-    beforeEach(async () => lumine.config.set("colors.extendAutocompleteToVariables", true));
+    beforeEach(async () => lumine.config.set("color-inline.extendAutocompleteToVariables", true));
 
     return describe("writing the name of a non-color variable", () =>
       it("returns suggestions for the matching variable", async function () {
@@ -405,8 +411,8 @@ describe("autocomplete provider", function () {
       await runs(async function () {
         jasmineContent = document.body.querySelector("#jasmine-content");
 
-        lumine.config.set("colors.autocompleteScopes", ["*"]);
-        lumine.config.set("colors.sourceNames", ["**/*.sass", "**/*.scss"]);
+        lumine.config.set("color-inline.autocompleteScopes", ["*"]);
+        lumine.config.set("color-inline.sourceNames", ["**/*.sass", "**/*.scss"]);
 
         // Set to live completion
         lumine.config.set("autocomplete.enableAutoActivation", true);
@@ -426,7 +432,7 @@ describe("autocomplete provider", function () {
       );
 
       await waitsForPromise("colors activation", () =>
-        lumine.packages.activatePackage("colors").then((pkg) => (colors = pkg.mainModule)),
+        lumine.packages.activatePackage("color-inline").then((pkg) => (colors = pkg.mainModule)),
       );
 
       await runs(async function () {

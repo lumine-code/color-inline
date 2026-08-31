@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -12,13 +12,13 @@ describe("ColorSearch", function () {
 
   beforeEach(async function () {
     registerViewProvider();
-    lumine.config.set("colors.delayBeforeScan", 0);
-    lumine.config.set("colors.sourceNames", ["**/*.styl", "**/*.less"]);
-    lumine.config.set("colors.extendedSearchNames", ["**/*.css"]);
-    lumine.config.set("colors.ignoredNames", ["project/vendor/**"]);
+    lumine.config.set("color-inline.delayBeforeScan", 0);
+    lumine.config.set("color-inline.sourceNames", ["**/*.styl", "**/*.less"]);
+    lumine.config.set("color-inline.extendedSearchNames", ["**/*.css"]);
+    lumine.config.set("color-inline.ignoredNames", ["project/vendor/**"]);
 
     await waitsForPromise(() =>
-      lumine.packages.activatePackage("colors").then(function (pkg) {
+      lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
         return (project = colors.getProject());
       }),

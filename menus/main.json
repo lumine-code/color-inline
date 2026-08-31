@@ -4,13 +4,13 @@
       "label": "Packages",
       "submenu": [
         {
-          "label": "Colors",
+          "label": "Color Inline",
           "submenu": [
-            { "label": "Show Palette", "command": "colors:show-palette" },
-            { "label": "Find Colors", "command": "colors:find-colors" },
-            { "label": "Create Report", "command": "colors:report" },
-            { "label": "Reload", "command": "colors:reload" },
-            { "label": "Project Settings", "command": "colors:project-settings" }
+            { "label": "Show Palette", "command": "color-inline:show-palette" },
+            { "label": "Find Colors", "command": "color-inline:find-colors" },
+            { "label": "Create Report", "command": "color-inline:report" },
+            { "label": "Reload", "command": "color-inline:reload" },
+            { "label": "Project Settings", "command": "color-inline:project-settings" }
           ]
         }
       ]

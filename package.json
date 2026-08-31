@@ -1,10 +1,10 @@
 {
-  "name": "colors",
+  "name": "color-inline",
   "author": "lumine-code",
-  "description": "Show the colors written in a file and across the project.",
-  "repository": "https://github.com/lumine-code/colors",
+  "description": "Show colors inline and collect them across the project.",
+  "repository": "https://github.com/lumine-code/color-inline",
   "bugs": {
-    "url": "https://github.com/lumine-code/colors/issues"
+    "url": "https://github.com/lumine-code/color-inline/issues"
   },
   "keywords": [
     "swatch",
@@ -21,8 +21,8 @@
     "lumine": "^1.0.0"
   },
   "backgroundTips": [
-    "You can see every colour a project defines, grouped and sorted, with {{ 'colors:show-palette' | keystroke }}",
-    "You can find every use of a colour across the project with {{ 'colors:find-colors' | keystroke }}"
+    "{% if keys['color-inline:show-palette'] %}See every colour a project defines with {{ 'color-inline:show-palette' | keystroke }}.{% else %}Use Color Inline's palette to see every colour a project defines.{% endif %}",
+    "{% if keys['color-inline:find-colors'] %}Find every use of a colour across the project with {{ 'color-inline:find-colors' | keystroke }}.{% else %}Color Inline can find every use of a colour across the project.{% endif %}"
   ],
   "specPackages": [
     "autocomplete",
@@ -32,9 +32,9 @@
   "main": "./lib/main",
   "files": [
     "docs",
-    "keymaps",
     "lib",
     "menus",
+    "resources",
     "spec",
     "styles"
   ],
@@ -63,32 +63,27 @@
         "1.0.0": "provideAutocomplete"
       }
     },
-    "colors.project": {
+    "color-inline.project": {
       "description": "Exposes the scanned colour project: its palette, its variables and its buffers.",
       "versions": {
-        "1.0.0": "provideColorsProject"
+        "1.0.0": "provideColorInlineProject"
       }
     }
   },
   "consumedServices": {
-    "color-picker": {
-      "versions": {
-        "^1.0.0": "consumeColorPicker"
-      }
-    },
-    "colors.color-expressions": {
+    "color-inline.color-expressions": {
       "versions": {
         "^1.0.0": "consumeColorExpressions"
       }
     },
-    "colors.variable-expressions": {
+    "color-inline.variable-expressions": {
       "versions": {
         "^1.0.0": "consumeVariableExpressions"
       }
     }
   },
   "viewProviders": [
-    "colorsViewProvider"
+    "colorInlineViewProvider"
   ],
   "deserializers": {
     "Palette": "deserializePalette",

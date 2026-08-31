@@ -1,21 +1,21 @@
-# colors.color-expressions
+# color-inline.color-expressions
 
-Lets a package teach `colors` to recognise a colour notation it does not know.
+Lets a package teach `color-inline` to recognise a colour notation it does not know.
 
 |             |                                      |
 | ----------- | ------------------------------------ |
 | Version     | `1.0.0`                              |
 | Provided by | any package adding a colour notation |
-| Consumed by | `colors`                             |
-| Owner       | `colors`                             |
+| Consumed by | `color-inline`                       |
+| Owner       | `color-inline`                       |
 
-This is a hub contract: `colors` is the consumer, and other packages provide into it.
+This is a hub contract: `color-inline` is the consumer, and other packages provide into it.
 
 ## Registration
 
 ```json
 "providedServices": {
-  "colors.color-expressions": {
+  "color-inline.color-expressions": {
     "versions": {
       "1.0.0": "provideColorExpressions"
     }
@@ -23,7 +23,7 @@ This is a hub contract: `colors` is the consumer, and other packages provide int
 }
 ```
 
-Return either one expression or `{ expressions: [...] }`. `colors` hands back a `Disposable` that removes what you registered, so deactivating your package removes your notation with it.
+Return either one expression or `{ expressions: [...] }`. `color-inline` hands back a `Disposable` that removes what you registered, so deactivating your package removes your notation with it.
 
 ## Contract
 

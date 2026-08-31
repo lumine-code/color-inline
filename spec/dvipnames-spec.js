@@ -1,9 +1,9 @@
-﻿const ColorContext = require("../lib/color-context");
+const ColorContext = require("../lib/color-context");
 const DVIPnames = require("../lib/dvipnames");
 const registry = require("../lib/color-expressions");
 const { scanTextForColors } = require("../lib/buffer-scanner");
 
-// The `colors:latex_predefined_dvipnames` expression looks its names up on the
+// The `color-inline:latex_predefined_dvipnames` expression looks its names up on the
 // context. Its table was lost in the CoffeeScript conversion while the
 // expression survived, so every one of these threw on lookup -- and because the
 // scanner runs as the package activates, that took the whole package down.

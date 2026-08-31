@@ -1,4 +1,4 @@
-﻿/*
+/*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
  * DS102: Remove unnecessary code created because of implicit returns
@@ -14,7 +14,7 @@ describe("ColorParser", function () {
   let [parser] = Array.from([]);
 
   beforeEach(function () {
-    const svgColorExpression = registry.getExpression("colors:named_colors");
+    const svgColorExpression = registry.getExpression("color-inline:named_colors");
     return (svgColorExpression.scopes = ["*"]);
   });
 

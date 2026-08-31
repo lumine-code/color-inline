@@ -1,4 +1,4 @@
-﻿const { registerViewProvider } = require("./helpers/view-provider");
+const { registerViewProvider } = require("./helpers/view-provider");
 const { _runs, _waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -15,7 +15,7 @@ describe("ColorProjectElement", function () {
     const jasmineContent = document.body.querySelector("#jasmine-content");
 
     await waitsForPromise(() =>
-      lumine.packages.activatePackage("colors").then(function (pkg) {
+      lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
         project = colors.getProject();
         projectElement = lumine.views.getView(project);
