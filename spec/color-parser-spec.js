@@ -29,41 +29,32 @@ describe("ColorParser", function () {
     return {
       description: "",
       asColor(r, g, b, a = 1) {
-        const { context } = this;
-        return describe(this.description, function () {
-          beforeEach(() => (parser = getParser(context)));
-
-          return it(`parses '${expression}' as a color`, function () {
-            return expect(
-              parser.parse(expression, this.scope != null ? this.scope : "less"),
-            ).toBeColor(r, g, b, a);
-          });
+        const { context, description } = this;
+        return it(`${description}parses '${expression}' as a color`, function () {
+          parser = getParser(context);
+          return expect(
+            parser.parse(expression, this.scope != null ? this.scope : "less"),
+          ).toBeColor(r, g, b, a);
         });
       },
 
       asUndefined() {
-        const { context } = this;
-        return describe(this.description, function () {
-          beforeEach(() => (parser = getParser(context)));
-
-          return it(`does not parse '${expression}' and return undefined`, function () {
-            return expect(
-              parser.parse(expression, this.scope != null ? this.scope : "less"),
-            ).toBeUndefined();
-          });
+        const { context, description } = this;
+        return it(`${description}does not parse '${expression}' and returns undefined`, function () {
+          parser = getParser(context);
+          return expect(
+            parser.parse(expression, this.scope != null ? this.scope : "less"),
+          ).toBeUndefined();
         });
       },
 
       asInvalid() {
-        const { context } = this;
-        return describe(this.description, function () {
-          beforeEach(() => (parser = getParser(context)));
-
-          return it(`parses '${expression}' as an invalid color`, function () {
-            return expect(
-              parser.parse(expression, this.scope != null ? this.scope : "less"),
-            ).not.toBeValid();
-          });
+        const { context, description } = this;
+        return it(`${description}parses '${expression}' as an invalid color`, function () {
+          parser = getParser(context);
+          return expect(
+            parser.parse(expression, this.scope != null ? this.scope : "less"),
+          ).not.toBeValid();
         });
       },
 
@@ -129,7 +120,6 @@ describe("ColorParser", function () {
     return itParses("#ccff7f00").asColor(255, 127, 0, 0.8);
   });
 
-  itParses("rgb(255,127,0)").asColor(255, 127, 0);
   itParses("rgb(255,127,0)").asColor(255, 127, 0);
   itParses("RGB(255,127,0)").asColor(255, 127, 0);
   itParses("RgB(255,127,0)").asColor(255, 127, 0);
@@ -850,7 +840,6 @@ describe("ColorParser", function () {
     .asColor(200, 90, 230);
 
   itParses("spin(#F00, 120)").asColor(0, 255, 0);
-  itParses("spin(#F00, 120)").asColor(0, 255, 0);
   itParses("spin(#F00, 120deg)").asColor(0, 255, 0);
   itParses("spin(#F00, -120)").asColor(0, 0, 255);
   itParses("spin(#F00, -120deg)").asColor(0, 0, 255);
@@ -860,11 +849,6 @@ describe("ColorParser", function () {
       "@a": "120",
     })
     .asColor(0, 255, 0);
-  itParses("spin(@c, @a)")
-    .withContext({
-      "@a": "120",
-    })
-    .asInvalid();
   itParses("spin(@c, @a)")
     .withContext({
       "@a": "120",
@@ -881,11 +865,6 @@ describe("ColorParser", function () {
       "@a": "0.5",
     })
     .asColor(255, 0, 0, 0.5);
-  itParses("fade(@c, @a)")
-    .withContext({
-      "@a": "0.5",
-    })
-    .asInvalid();
   itParses("fade(@c, @a)")
     .withContext({
       "@a": "0.5",
@@ -931,7 +910,6 @@ describe("ColorParser", function () {
     })
     .asColor(140, 140, 140);
 
-  itParses("contrast(@base)").asInvalid();
   itParses("contrast(@base)").asInvalid();
   itParses("contrast(@base, @dark)").asInvalid();
   itParses("contrast(@base, @dark, @light)").asInvalid();

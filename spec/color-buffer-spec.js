@@ -449,7 +449,7 @@ describe("ColorBuffer", function () {
         await runs(() => expect(colorBuffer.getColorMarkers().length).toEqual(3));
       });
 
-      describe("when a color marker is edited", function () {
+      describe("when a color marker value is changed", function () {
         let [colorsUpdateSpy] = Array.from([]);
 
         beforeEach(async function () {
@@ -530,7 +530,7 @@ describe("ColorBuffer", function () {
         });
       });
 
-      return describe("when a color marker is edited", function () {
+      return describe("when a color marker is removed", function () {
         let [colorsUpdateSpy] = Array.from([]);
 
         beforeEach(async function () {

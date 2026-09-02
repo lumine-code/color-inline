@@ -40,7 +40,7 @@ describe(".findClosingIndex()", function () {
 
   return tests.forEach(function (...args) {
     const [source, expected] = Array.from(args[0]);
-    return it("returs the index of the closing character", () =>
+    return it(`returns the closing character index for ${jasmine.pp(source)}`, () =>
       expect(findClosingIndex(source, 2, "(", ")")).toEqual(expected));
   });
 });

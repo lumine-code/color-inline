@@ -5,7 +5,7 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-describe("autocomplete provider", function () {
+describe("autocomplete provider for CSS-like files", function () {
   let [
     completionDelay,
     editor,
@@ -394,7 +394,7 @@ describe("autocomplete provider", function () {
   });
 });
 
-describe("autocomplete provider", function () {
+describe("autocomplete provider for Sass files", function () {
   let [
     completionDelay,
     editor,

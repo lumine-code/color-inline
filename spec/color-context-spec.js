@@ -147,7 +147,7 @@ describe("ColorContext", function () {
       return itParses("@list-item-height").asUndefinedColor();
     });
 
-    describe("that contains circular references", function () {
+    describe("that contains circular references between ordinary variables", function () {
       beforeEach(function () {
         const variables = [
           createVar("@foo", "@bar"),
@@ -163,7 +163,7 @@ describe("ColorContext", function () {
       return itParses("@taz").asUndefined();
     });
 
-    describe("that contains circular references", function () {
+    describe("that contains circular references between color variables", function () {
       beforeEach(function () {
         const variables = [
           createColorVar("@foo", "@bar"),

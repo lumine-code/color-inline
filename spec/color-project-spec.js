@@ -1309,7 +1309,7 @@ describe("ColorProject", function () {
 //#    ##     ## ##       ##       ##     ## ##     ## ##          ##
 //#    ########  ######## ##       ##     ##  #######  ########    ##
 
-describe("ColorProject", function () {
+describe("ColorProject defaults file", function () {
   let [project, rootPath] = Array.from([]);
   return describe("when the project has a color-inline defaults file", function () {
     beforeEach(async function () {
