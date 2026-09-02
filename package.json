@@ -27,7 +27,8 @@
   "specPackages": [
     "autocomplete",
     "language-coffee-script",
-    "language-less"
+    "language-less",
+    "language-regex"
   ],
   "main": "./lib/main",
   "files": [

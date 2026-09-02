@@ -515,6 +515,8 @@ describe("ColorBufferElement", function () {
           }),
         );
 
+        await editor.languageMode.ready;
+        await editor.languageMode.atTransactionEnd();
         await waitsForPromise(() => colorBuffer.initialize());
       });
 

@@ -45,6 +45,8 @@ describe("Color Inline", function () {
       ["txt"],
     );
 
+    await lumine.packages.activatePackage("language-regex");
+
     await waitsForPromise({ label: "colors activation" }, () =>
       lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;

@@ -14,6 +14,7 @@ describe("ColorProjectElement", function () {
     registerViewProvider();
     const jasmineContent = document.body.querySelector("#jasmine-content");
 
+    await lumine.packages.activatePackage("language-regex");
     await waitsForPromise(() =>
       lumine.packages.activatePackage("color-inline").then(function (pkg) {
         colors = pkg.mainModule;
@@ -25,6 +26,12 @@ describe("ColorProjectElement", function () {
   });
 
   it("is bound to the ColorProject model", async () => expect(projectElement).toExist());
+
+  it("uses the shared Tree-sitter regex grammar for ignored scopes", () => {
+    const grammar = projectElement.ignoredScopes.getModel().getGrammar();
+    expect(grammar.scopeName).toBe("source.regexp");
+    expect(grammar.constructor.name).toBe("TreeSitterGrammar");
+  });
 
   describe("typing in the sourceNames input", () =>
     it("update the source names in the project", async function () {
