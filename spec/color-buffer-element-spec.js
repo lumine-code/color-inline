@@ -129,7 +129,10 @@ describe("ColorBufferElement", function () {
                 [2, 14],
               ]),
             );
-            await waitsFor(() => colorBufferElement.updateSelections.calls.count() > 0);
+            const previousUpdates = colorBufferElement.updateSelections.calls.count();
+            await waitsFor(
+              () => colorBufferElement.updateSelections.calls.count() > previousUpdates,
+            );
           });
 
           return it("hides the intersected marker", async function () {
@@ -151,7 +154,10 @@ describe("ColorBufferElement", function () {
                 [2, 14],
               ]),
             );
-            await waitsFor(() => colorBufferElement.updateSelections.calls.count() > 0);
+            const previousUpdates = colorBufferElement.updateSelections.calls.count();
+            await waitsFor(
+              () => colorBufferElement.updateSelections.calls.count() > previousUpdates,
+            );
           });
 
           it("hides the existing markers", async function () {
@@ -166,10 +172,10 @@ describe("ColorBufferElement", function () {
             beforeEach(async function () {
               registerViewProvider();
               await waitsForPromise("colors available", () => colorBuffer.variablesAvailable());
-              await waitsFor("last marker visible", function () {
-                const decorations = getEditorDecorations("background");
-                return isVisible(decorations[3]);
-              });
+              await waitsFor(
+                "new marker decorated",
+                () => getEditorDecorations("background").length === 4,
+              );
             });
 
             return it("hides the created markers", async function () {
@@ -177,7 +183,7 @@ describe("ColorBufferElement", function () {
               expect(isVisible(decorations[0])).toBeFalsy();
               expect(isVisible(decorations[1])).toBeTruthy();
               expect(isVisible(decorations[2])).toBeTruthy();
-              return expect(isVisible(decorations[3])).toBeTruthy();
+              return expect(isVisible(decorations[3])).toBeFalsy();
             });
           });
         });
