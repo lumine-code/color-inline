@@ -8,6 +8,8 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  */
 const fs = require("fs");
 const path = require("path");
+const LANGUAGE_COFFEE_SCRIPT_PATH = path.join(__dirname, "..", "..", "language-coffee-script");
+const LANGUAGE_LESS_PATH = path.join(__dirname, "..", "..", "language-less");
 require("./helpers/spec-helper");
 require("./helpers/matchers");
 const { mousedown } = require("./helpers/events");
@@ -438,8 +440,8 @@ describe("ColorBufferElement", function () {
 
       beforeEach(async function () {
         registerViewProvider();
-        await waitsForPromise(() => lumine.packages.activatePackage("language-coffee-script"));
-        await waitsForPromise(() => lumine.packages.activatePackage("language-less"));
+        await waitsForPromise(() => lumine.packages.activatePackage(LANGUAGE_COFFEE_SCRIPT_PATH));
+        await waitsForPromise(() => lumine.packages.activatePackage(LANGUAGE_LESS_PATH));
       });
 
       describe("with the default wildcard", function () {
@@ -509,7 +511,7 @@ describe("ColorBufferElement", function () {
     return describe("when color-inline.ignoredScopes settings is defined", function () {
       beforeEach(async function () {
         registerViewProvider();
-        await waitsForPromise(() => lumine.packages.activatePackage("language-coffee-script"));
+        await waitsForPromise(() => lumine.packages.activatePackage(LANGUAGE_COFFEE_SCRIPT_PATH));
 
         await waitsForPromise(() =>
           lumine.workspace.open("scope-filter.coffee").then(function (o) {

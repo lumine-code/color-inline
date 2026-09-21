@@ -17,6 +17,15 @@ describe("Color", function () {
     it("creates the color with the provided components", () =>
       expect(new Color(255, 127, 64, 0.5)).toBeColor(255, 127, 64, 0.5)));
 
+  it("copies another color without assigning its computed properties", function () {
+    color.variables = ["accent"];
+
+    const copy = new Color(color);
+
+    expect(copy).toBeColor(color.red, color.green, color.blue, color.alpha);
+    expect(copy.variables).toEqual(["accent"]);
+  });
+
   describe("created with a hexa rgb string", () =>
     it("creates the color with the provided components", () =>
       expect(new Color("#ff6933")).toBeColor(255, 105, 51, 1)));

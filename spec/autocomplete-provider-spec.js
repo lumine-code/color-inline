@@ -5,6 +5,9 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
+const path = require("path");
+const AUTOCOMPLETE_PATH = path.join(__dirname, "..", "..", "autocomplete");
+
 describe("autocomplete provider for CSS-like files", function () {
   let [
     completionDelay,
@@ -42,7 +45,7 @@ describe("autocomplete provider for CSS-like files", function () {
 
     await waitsForPromise("autocomplete activation", () =>
       lumine.packages
-        .activatePackage("autocomplete")
+        .activatePackage(AUTOCOMPLETE_PATH)
         .then((pkg) => (autocompleteMain = pkg.mainModule)),
     );
 
@@ -427,7 +430,7 @@ describe("autocomplete provider for Sass files", function () {
 
       await waitsForPromise("autocomplete activation", () =>
         lumine.packages
-          .activatePackage("autocomplete")
+          .activatePackage(AUTOCOMPLETE_PATH)
           .then((pkg) => (autocompleteMain = pkg.mainModule)),
       );
 

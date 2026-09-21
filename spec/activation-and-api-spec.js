@@ -6,13 +6,12 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 const { Disposable, TextEditor } = require("lumine");
-const ColorInlineAPI = require("../lib/color-inline-api");
-const registry = require("../lib/variable-expressions");
 
 const { SERIALIZE_VERSION, SERIALIZE_MARKERS_VERSION } = require("../lib/versions");
 
 describe("Color Inline", function () {
   let [workspaceElement, colors, project] = Array.from([]);
+  let ColorInlineAPI, registry;
 
   // Waits until the variable count stops moving, so an assertion cannot land
   // on a half-applied rescan. Narrowing sourceNames evicts the variables of
@@ -29,6 +28,8 @@ describe("Color Inline", function () {
     return project.getVariables().length;
   };
   beforeEach(async function () {
+    ColorInlineAPI = require("../lib/color-inline-api");
+    registry = require("../lib/variable-expressions");
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
 
@@ -97,7 +98,7 @@ describe("Color Inline", function () {
         spyOn(project, "destroy").and.callThrough();
         spyOn(colorBuffer, "destroy").and.callThrough();
 
-        return colors.deactivate();
+        return lumine.packages.deactivatePackage("color-inline");
       });
     });
 

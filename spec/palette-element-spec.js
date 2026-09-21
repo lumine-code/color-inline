@@ -6,13 +6,12 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * DS205: Consider reworking code to avoid use of IIFEs
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-const Color = require("../lib/color");
-const Palette = require("../lib/palette");
 const { THEME_VARIABLES } = require("../lib/uris");
 const { change, click } = require("./helpers/events");
 
 describe("PaletteElement", function () {
   let [nextID, palette, paletteElement, workspaceElement, colors, project] = Array.from([0]);
+  let Color, Palette;
 
   // The counts in the grouped-palette specs were a census of upstream's fixture
   // tree and went stale as soon as a fixture was added or removed. What the
@@ -39,6 +38,8 @@ describe("PaletteElement", function () {
   });
 
   beforeEach(async function () {
+    Color = require("../lib/color");
+    Palette = require("../lib/palette");
     registerViewProvider();
     workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);

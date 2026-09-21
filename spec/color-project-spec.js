@@ -11,10 +11,11 @@ const fs = require("fs");
 const path = require("path");
 
 const { SERIALIZE_VERSION, SERIALIZE_MARKERS_VERSION } = require("../lib/versions");
-const ColorProject = require("../lib/color-project");
-const ColorBuffer = require("../lib/color-buffer");
 const jsonFixture = require("./helpers/fixtures").jsonFixture(__dirname, "fixtures");
 const { _click } = require("./helpers/events");
+require("./helpers/matchers");
+
+let ColorProject, ColorBuffer;
 
 const TOTAL_VARIABLES_IN_PROJECT = 12;
 const TOTAL_COLORS_VARIABLES_IN_PROJECT = 10;
@@ -49,6 +50,8 @@ describe("ColorProject", function () {
   const fromFixture = (relative) => path.resolve(rootPath, relative);
 
   beforeEach(async function () {
+    ColorProject = require("../lib/color-project");
+    ColorBuffer = require("../lib/color-buffer");
     registerViewProvider();
     lumine.config.set("color-inline.sourceNames", ["*.styl"]);
     lumine.config.set("color-inline.ignoredNames", []);
@@ -75,7 +78,37 @@ describe("ColorProject", function () {
     if (baseProject !== project) await baseProject.destroy();
   });
 
-  describe(".deserialize", () =>
+  describe(".deserialize", function () {
+    it("restores nested variables without re-entering the package deserializer", function () {
+      const state = {
+        version: SERIALIZE_VERSION,
+        markersVersion: SERIALIZE_MARKERS_VERSION,
+        globalSourceNames: ["*.styl"],
+        globalIgnoredNames: [],
+        variables: {
+          deserializer: "VariablesCollection",
+          content: [
+            {
+              name: "accent",
+              value: "#abc",
+              range: [0, 10],
+              path: "/path/to/colors.styl",
+              line: 1,
+              isColor: true,
+              color: [170, 187, 204, 1],
+              variables: [],
+            },
+          ],
+        },
+      };
+      spyOn(lumine.deserializers, "deserialize");
+
+      project = ColorProject.deserialize(state);
+
+      expect(lumine.deserializers.deserialize).not.toHaveBeenCalled();
+      expect(project.getColorVariables()[0].color).toBeColor(170, 187, 204, 1);
+    });
+
     it("restores the project in its previous state", async function () {
       const data = {
         root: rootPath,
@@ -94,7 +127,8 @@ describe("ColorProject", function () {
       ]);
       expect(project.getVariables().length).toEqual(TOTAL_VARIABLES_IN_PROJECT);
       return expect(project.getColorVariables().length).toEqual(TOTAL_COLORS_VARIABLES_IN_PROJECT);
-    }));
+    });
+  });
 
   describe("::initialize", function () {
     beforeEach(async function () {
@@ -1313,6 +1347,7 @@ describe("ColorProject defaults file", function () {
   let [project, rootPath] = Array.from([]);
   return describe("when the project has a color-inline defaults file", function () {
     beforeEach(async function () {
+      ColorProject = require("../lib/color-project");
       registerViewProvider();
       lumine.config.set("color-inline.sourceNames", ["*.sass"]);
 

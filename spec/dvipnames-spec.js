@@ -1,13 +1,17 @@
-const ColorContext = require("../lib/color-context");
-const DVIPnames = require("../lib/dvipnames");
-const registry = require("../lib/color-expressions");
-const { scanTextForColors } = require("../lib/buffer-scanner");
+let ColorContext, DVIPnames, registry, scanTextForColors;
 
 // The `color-inline:latex_predefined_dvipnames` expression looks its names up on the
 // context. Its table was lost in the CoffeeScript conversion while the
 // expression survived, so every one of these threw on lookup -- and because the
 // scanner runs as the package activates, that took the whole package down.
 describe("DVIP names", function () {
+  beforeEach(() => {
+    ColorContext = require("../lib/color-context");
+    DVIPnames = require("../lib/dvipnames");
+    registry = require("../lib/color-expressions");
+    ({ scanTextForColors } = require("../lib/buffer-scanner"));
+  });
+
   it("puts the table on the color context", function () {
     const context = new ColorContext({ registry });
 

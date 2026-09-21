@@ -478,6 +478,35 @@ describe("VariablesCollection", function () {
       });
     });
 
+    describe("::evaluateVariables", function () {
+      it("yields while reevaluating stable variables that exceed one frame", function () {
+        const frames = [];
+        collection.addMany([
+          createVar("foo", "#fff", [0, 10], "/path/to/foo.styl", 1),
+          createVar("bar", "#000", [12, 22], "/path/to/foo.styl", 2),
+          createVar("baz", "#abc", [24, 34], "/path/to/foo.styl", 3),
+        ]);
+        spyOn(window, "requestAnimationFrame").and.callFake((callback) => {
+          frames.push(callback);
+        });
+        spyOn(Date, "now").and.returnValues(0, 0, 17);
+        spyOn(collection, "evaluateVariableColor");
+        const complete = jasmine.createSpy("complete");
+
+        collection.evaluateVariables(collection.getVariables(), complete);
+
+        expect(collection.evaluateVariableColor.calls.count()).toEqual(1);
+        expect(frames.length).toEqual(1);
+        expect(complete).not.toHaveBeenCalled();
+
+        Date.now.and.returnValue(17);
+        frames.shift()();
+
+        expect(collection.evaluateVariableColor.calls.count()).toEqual(3);
+        expect(complete).toHaveBeenCalledWith([]);
+      });
+    });
+
     describe("::serialize", function () {
       describe("with an empty collection", () =>
         it("returns an empty serialized collection", () =>
@@ -602,6 +631,31 @@ describe("VariablesCollection", function () {
       it("restores the variables", function () {
         expect(collection.length).toEqual(3);
         return expect(collection.getColorVariables().length).toEqual(2);
+      });
+
+      it("leaves serialized variables reusable by another restoration", function () {
+        const state = {
+          content: [
+            {
+              name: "accent",
+              value: "#abc",
+              range: [0, 10],
+              path: "/path/to/foo.styl",
+              line: 1,
+              isColor: true,
+              color: [170, 187, 204, 1],
+              variables: [],
+            },
+          ],
+        };
+
+        const first = VariablesCollection.deserialize(state);
+        const second = VariablesCollection.deserialize(state);
+
+        expect(first.getColorVariables()[0].color).toBeColor(170, 187, 204, 1);
+        expect(second.getColorVariables()[0].color).toBeColor(170, 187, 204, 1);
+        expect(state.content[0].color).toEqual([170, 187, 204, 1]);
+        expect(state.content[0].variables).toEqual([]);
       });
 
       return it("restores all the denormalized data in the collection", function () {
