@@ -20,10 +20,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "{% if keys['color-inline:show-palette'] %}See every colour a project defines with {{ 'color-inline:show-palette' | keystroke }}.{% else %}Use Color Inline's palette to see every colour a project defines.{% endif %}",
-    "{% if keys['color-inline:find-colors'] %}Find every use of a colour across the project with {{ 'color-inline:find-colors' | keystroke }}.{% else %}Color Inline can find every use of a colour across the project.{% endif %}"
-  ],
   "specPackages": [
     "autocomplete",
     "language-coffee-script",
@@ -46,18 +42,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "dependencies": {
-    "css-color-function": "^1.3.3",
-    "picomatch": "^4.0.7"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.9.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-n": "^18.3.0",
-    "globals": "^17.11.0",
-    "prettier": "^3.9.6"
-  },
   "providedServices": {
     "autocomplete.provider": {
       "description": "Completes colour names and colour variables while typing.",
@@ -70,7 +54,24 @@
       "versions": {
         "1.0.0": "provideColorInlineProject"
       }
+    },
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
     }
+  },
+  "dependencies": {
+    "css-color-function": "^1.3.3",
+    "picomatch": "^4.0.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.3.0",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6"
   },
   "consumedServices": {
     "color-inline.color-expressions": {
