@@ -48,6 +48,8 @@ Variables are scanned from the files matching the `sourceNames` setting, which c
 
 The scan uses the editor's bundled ripgrep to find candidate files and honours the repository's ignore rules; `ignoredNames` excludes further paths, and a pattern naming a directory excludes everything beneath it.
 
+The project index stays in memory and is rebuilt when an editor or a colour command first needs it. Window state saves project settings and editor marks, without the scanned paths and variables; an empty workspace starts no scan.
+
 ## Customization
 
 The marks are styled from the theme's own variables. To change how a colour mark reads, paste something like this into your `styles.css`:

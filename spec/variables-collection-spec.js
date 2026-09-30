@@ -449,6 +449,32 @@ describe("VariablesCollection", function () {
     //#    ##     ## ########  ######     ##     #######  ##     ## ########
 
     describe("::initialize", function () {
+      it("restores dependency references without scanning the growing name array", function () {
+        spyOn(collection.variableNames, "includes").and.callThrough();
+        for (let index = 0; index < 2048; index++) {
+          collection.restoreVariable(createVar(`name${index}`, "literal", [0, 1], FOO_PATH, index));
+        }
+        collection.restoreVariable(createVar("alias", "name0", [0, 1], FOO_PATH, 2048));
+
+        expect(collection.dependencyGraph.name0).toEqual(["alias"]);
+        expect(collection.variableNames.includes).not.toHaveBeenCalled();
+      });
+
+      it("keeps a dependency name until its last definition has been removed", function () {
+        const first = createVar("shared", "1", [0, 1], FOO_PATH, 1);
+        const second = createVar("shared", "2", [2, 3], FOO_PATH, 2);
+        collection.addMany([first, second]);
+
+        collection.remove(first);
+        expect(collection.getVariableDependencies({ value: "shared" })).toEqual(["shared"]);
+        collection.remove(second);
+        expect(collection.getVariableDependencies({ value: "shared" })).toEqual([]);
+
+        collection.restoreVariable(createVar("shared", "1", [0, 1], FOO_PATH, 1));
+        collection.reset();
+        expect(collection.getVariableDependencies({ value: "shared" })).toEqual([]);
+      });
+
       it("yields while restoring a collection that exceeds one frame", function () {
         const frames = [];
         const content = [
@@ -594,7 +620,7 @@ describe("VariablesCollection", function () {
     return describe(".deserialize", function () {
       beforeEach(
         () =>
-          (collection = lumine.deserializers.deserialize({
+          (collection = VariablesCollection.deserialize({
             deserializer: "VariablesCollection",
             content: [
               {

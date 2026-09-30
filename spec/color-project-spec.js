@@ -333,7 +333,7 @@ describe("ColorProject", function () {
     beforeEach(async () => await waitsForPromise(() => project.initialize()));
 
     describe("::serialize", () =>
-      it("returns an object with project properties", async function () {
+      it("saves project settings without the derived paths and variables", async function () {
         const date = new Date();
         spyOn(project, "getTimestamp").and.callFake(() => date);
         return expect(project.serialize()).toEqual({
@@ -344,11 +344,9 @@ describe("ColorProject", function () {
           timestamp: date,
           version: SERIALIZE_VERSION,
           markersVersion: SERIALIZE_MARKERS_VERSION,
-          paths: [p("styles/buttons.styl"), p("styles/variables.styl")],
           globalSourceNames: ["*.styl"],
           globalIgnoredNames: [],
           buffers: {},
-          variables: project.variables.serialize(),
         });
       }));
 
