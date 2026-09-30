@@ -9,6 +9,7 @@ const { runs, waitsFor, waitsForPromise, waitsForQuiet } = require("./helpers/wa
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 const ColorBuffer = require("../lib/color-buffer");
+require("./helpers/matchers");
 const jsonFixture = require("./helpers/fixtures").jsonFixture(__dirname, "fixtures");
 
 describe("ColorBuffer", function () {
@@ -65,6 +66,39 @@ describe("ColorBuffer", function () {
 
   it("creates a color buffer for each editor in the workspace", async () =>
     expect(project.colorBuffersByEditorId[editor.id]).toBeDefined());
+
+  it("discards an obsolete scan without changing the current markers", async () => {
+    const buffer = project.colorBufferForEditor(editor);
+    await buffer.variablesAvailable();
+    const markers = buffer.getColorMarkers().slice();
+    const scan = buffer.scanBufferForColors();
+    buffer.terminateRunningTask();
+    expect(await scan).toBeNull();
+    expect(buffer.getColorMarkers()).toEqual(markers);
+  });
+
+  it("stops a pending scan when its buffer is destroyed", async () => {
+    const buffer = project.colorBufferForEditor(editor);
+    await buffer.variablesAvailable();
+    const updates = jasmine.createSpy("marker updates after destroy");
+    buffer.onDidUpdateColorMarkers(updates);
+    const scan = buffer.scanBufferForColors();
+    buffer.destroy();
+    expect(await scan).toBeNull();
+    expect(updates).not.toHaveBeenCalled();
+  });
+
+  it("reconciles overlapping scan results without duplicating markers", async () => {
+    const buffer = project.colorBufferForEditor(editor);
+    await buffer.variablesAvailable();
+    const results = await buffer.scanBufferForColors();
+    await Promise.all([
+      buffer.updateColorMarkers(results.slice()),
+      buffer.updateColorMarkers(results.slice()),
+    ]);
+    expect(buffer.getColorMarkers().length).toBe(results.length);
+    expect(buffer.getMarkerLayer().findMarkers().length).toBe(results.length);
+  });
 
   describe("when the file path matches an entry in ignoredBufferNames", function () {
     beforeEach(async function () {

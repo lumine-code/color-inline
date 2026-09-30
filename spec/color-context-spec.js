@@ -7,10 +7,21 @@
  */
 
 const ColorContext = require("../lib/color-context");
+require("./helpers/matchers");
 const registry = require("../lib/color-expressions");
 
 describe("ColorContext", function () {
   let [context, _parser] = Array.from([]);
+  let namedColorScopes;
+  beforeEach(function () {
+    registry.removeExpression("color-inline:variables");
+    const namedColors = registry.getExpression("color-inline:named_colors");
+    namedColorScopes = namedColors.scopes;
+    namedColors.scopes = ["*"];
+  });
+  afterEach(function () {
+    registry.getExpression("color-inline:named_colors").scopes = namedColorScopes;
+  });
 
   const itParses = (expression) => ({
     asUndefined() {
@@ -79,6 +90,37 @@ describe("ColorContext", function () {
     itParses("red").asColor(255, 0, 0);
     itParses("#ff0000").asColor(255, 0, 0);
     return itParses("rgb(255,127,0)").asColor(255, 127, 0);
+  });
+
+  it("reuses preindexed variables without sorting or copying them", function () {
+    const variables = [{ name: "red", value: "#f00", path: "/color.styl" }];
+    const colorVariables = variables.slice();
+    const vars = { red: variables[0] };
+    spyOn(variables, "slice").and.callThrough();
+    spyOn(colorVariables, "slice").and.callThrough();
+    context = new ColorContext({
+      variables,
+      colorVariables,
+      vars,
+      colorVars: vars,
+      defaultVars: {},
+      defaultColorVars: {},
+      sorted: true,
+      registry,
+    });
+
+    expect(context.readColor("red")).toBeColor("#f00");
+    expect(variables.slice).not.toHaveBeenCalled();
+    expect(colorVariables.slice).not.toHaveBeenCalled();
+    expect(context.clone().readColor("red")).toBeColor("#f00");
+  });
+
+  it("keeps the requested Sass dialect while reading nested functions", function () {
+    context = new ColorContext({ registry });
+    const expression = "tint(tint(#ff0000, 25%), 25%)";
+
+    expect(context.readColor(expression, false, "scss:compass")).toBeColor(255, 239, 239);
+    expect(context.readColor(expression, false, "scss:bourbon")).toBeColor(255, 111, 111);
   });
 
   describe("with a variables array", function () {

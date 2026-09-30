@@ -9,6 +9,62 @@ const VariableScanner = require("../lib/variable-scanner");
 const registry = require("../lib/variable-expressions");
 const scopeFromFileName = require("../lib/scope-from-file-name");
 
+describe("VariableScanner line tracking", function () {
+  let scanner;
+
+  beforeEach(function () {
+    scanner = new VariableScanner({ registry, scope: "scss" });
+  });
+
+  it("puts Sass aliases on the same line and handles mixed line endings", function () {
+    const text =
+      "$first-color: #fff;\r\n$second-color: #000;\r$third-color: #abc;\n$fourth-color: #def;";
+    let start = 0;
+    for (let line = 0; line < 4; line++) {
+      const result = scanner.search(text, start);
+      expect(result.length).toBe(2);
+      for (const variable of result) expect(variable.line).toBe(line);
+      start = result.lastIndex;
+    }
+    expect(scanner.search(text, 0)[0].line).toBe(0);
+    expect(scanner.search("\n\n$color: #fff;")[0].line).toBe(2);
+  });
+
+  it("counts each text character at most twice across successive declarations", function () {
+    const text = new String("$color: #fff;\r\n".repeat(1000));
+    const characters = spyOn(text, "charCodeAt").and.callThrough();
+    let start = 0;
+    let result;
+    let count = 0;
+    while ((result = scanner.search(text, start))) {
+      expect(result[0].line).toBe(count++);
+      start = result.lastIndex;
+    }
+    expect(count).toBe(1000);
+    expect(characters.calls.count()).toBeLessThan(text.length * 2);
+  });
+
+  it("reuses the regexp and refreshes it when the registry changes", function () {
+    const ExpressionsRegistry = require("../lib/expressions-registry");
+    const VariableExpression = require("../lib/variable-expression");
+    const expressions = new ExpressionsRegistry(VariableExpression);
+    scanner = new VariableScanner({ registry: expressions, scope: "css" });
+    const first = scanner.getRegExp();
+    expect(scanner.getRegExp()).toBe(first);
+    expressions.createExpression("test:variable", "(color)=(#[a-f0-9]{6})", ["css"]);
+    expect(scanner.getRegExp()).not.toBe(first);
+    expect(scanner.search("color=#ffffff")[0].name).toBe("color");
+    expressions.removeExpression("test:variable");
+    expect(scanner.search("color=#ffffff")).toBeUndefined();
+    expressions.createExpression("test:empty-variable", "(?=color)", ["css"]);
+    expect(scanner.search("color=#ffffff")).toBeUndefined();
+    expressions.removeExpression("test:empty-variable");
+    expressions.createExpression("test:empty-handler", "color=#[a-f0-9]{6}", ["css"], () => {});
+    expect(scanner.search("color=#ffffff")).toBeUndefined();
+    expressions.dispose();
+  });
+});
+
 describe("VariableScanner", function () {
   let [scanner, editor, text, scope] = Array.from([]);
 

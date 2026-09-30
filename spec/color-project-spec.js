@@ -78,6 +78,44 @@ describe("ColorProject", function () {
     if (baseProject !== project) await baseProject.destroy();
   });
 
+  it("applies a worker snapshot before scanning the next source", async () => {
+    await project.initialize();
+    const paths = project.getPaths();
+    let finishFirst;
+    const snapshots = [];
+    const snapshot = (name, path) => {
+      const variables = project.variables.serialize().content;
+      variables.push({
+        name,
+        path,
+        value: "#abc",
+        range: [0, 4],
+        line: 0,
+        isColor: true,
+        color: [170, 187, 204, 1],
+      });
+      variables.preEvaluated = true;
+      variables.paths = paths;
+      return variables;
+    };
+    spyOn(project, "loadVariablesForPaths").and.callFake((requested) => {
+      snapshots.push(project.getVariables().map((variable) => variable.name));
+      if (snapshots.length === 1) {
+        return new Promise((resolve) => (finishFirst = resolve));
+      }
+      return Promise.resolve(snapshot("second-result", requested[0]));
+    });
+    const first = project.reloadVariablesForPath(paths[0]);
+    const second = project.reloadVariablesForPath(paths[1]);
+    await flushMicrotasks();
+    expect(snapshots.length).toBe(1);
+    finishFirst(snapshot("first-result", paths[0]));
+    await Promise.all([first, second]);
+    expect(snapshots[1]).toContain("first-result");
+    expect(project.getVariableByName("first-result")).toBeDefined();
+    expect(project.getVariableByName("second-result")).toBeDefined();
+  });
+
   describe(".deserialize", function () {
     it("restores nested variables without re-entering the package deserializer", function () {
       const state = {
@@ -593,7 +631,7 @@ describe("ColorProject", function () {
               return (variablesBufferRanges[variable.name] = variable.bufferRange);
             });
 
-            spyOn(project.variables, "addMany").and.callThrough();
+            spyOn(project.variables, "updateCollectionAsync").and.callThrough();
 
             editor.setSelectedBufferRange([
               [0, 0],
@@ -603,7 +641,8 @@ describe("ColorProject", function () {
             return editor.getBuffer().emitter.emit("did-stop-changing");
           });
 
-          await waitsFor(() => project.variables.addMany.calls.count() > 0);
+          await waitsFor(() => project.variables.updateCollectionAsync.calls.count() > 0);
+          await project.variables.updateCollectionAsync.calls.mostRecent().returnValue;
         });
 
         it("does not trigger a change event", async () =>

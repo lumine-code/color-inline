@@ -8,6 +8,77 @@ const ColorScanner = require("../lib/color-scanner");
 const ColorContext = require("../lib/color-context");
 const registry = require("../lib/color-expressions");
 
+describe("ColorScanner line tracking", function () {
+  let scanner;
+
+  beforeEach(function () {
+    scanner = new ColorScanner({ context: new ColorContext({ registry }) });
+  });
+
+  it("tracks mixed line endings and searches that restart or change text", function () {
+    const text = "color: #fff;\r\ncolor: #000;\rcolor: #abc;\ncolor: #def;";
+    let result = scanner.search(text, "css");
+    expect(result.line).toBe(0);
+    result = scanner.search(text, "css", result.lastIndex);
+    expect(result.line).toBe(1);
+    result = scanner.search(text, "css", result.lastIndex);
+    expect(result.line).toBe(2);
+    result = scanner.search(text, "css", result.lastIndex);
+    expect(result.line).toBe(3);
+    expect(scanner.search(text, "css", 0).line).toBe(0);
+    expect(scanner.search("\n\n#fff", "css").line).toBe(2);
+  });
+
+  it("counts each text character at most twice across successive matches", function () {
+    const text = new String("color: #fff;\r\n".repeat(1000));
+    const characters = spyOn(text, "charCodeAt").and.callThrough();
+    let start = 0;
+    let result;
+    let count = 0;
+    while ((result = scanner.search(text, "css", start))) {
+      expect(result.line).toBe(count++);
+      start = result.lastIndex;
+    }
+    expect(count).toBe(1000);
+    expect(characters.calls.count()).toBeLessThan(text.length * 2);
+  });
+
+  it("reuses the scope regexp and refreshes it when the registry changes", function () {
+    const ExpressionsRegistry = require("../lib/expressions-registry");
+    const ColorExpression = require("../lib/color-expression");
+    const expressions = new ExpressionsRegistry(ColorExpression);
+    expressions.addExpressions(registry.getExpressions());
+    scanner = new ColorScanner({ context: new ColorContext({ registry: expressions }) });
+    const first = scanner.getRegExpForScope("css");
+    expect(scanner.getRegExpForScope("css")).toBe(first);
+    expressions.createExpression("test:color", "custom-color", ["css"], function () {
+      this.hex = "ff0000";
+    });
+    expect(scanner.getRegExpForScope("css")).not.toBe(first);
+    expect(scanner.search("custom-color", "css").color.hex).toBe("ff0000");
+    expressions.removeExpression("test:color");
+    expect(scanner.search("custom-color", "css")).toBeUndefined();
+    expressions.createExpression("test:empty-color", "(?=custom-color)", ["css"], function () {
+      this.hex = "ff0000";
+    });
+    expect(scanner.search("custom-color", "css")).toBeUndefined();
+    expressions.removeExpression("test:empty-color");
+    expressions.dispose();
+  });
+
+  it("rejects malformed functions with long whitespace runs promptly", function () {
+    jasmine.useRealClock();
+    const spaces = " ".repeat(20000);
+    const started = Date.now();
+    for (const prefix of ["rgb(", "rgba(", "darken(", "darken(a", "multiply(a"]) {
+      expect(scanner.search(`${prefix}${spaces}!`, "css")).toBeUndefined();
+      expect(scanner.search(`${prefix}${spaces}!)`, "css")).toBeUndefined();
+    }
+    // Previously just darken( followed by 3000 spaces stalled for seconds.
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+});
+
 describe("ColorScanner", function () {
   let [scanner, editor, text, result, _lastIndex] = Array.from([]);
 

@@ -53,8 +53,10 @@ describe("ColorBufferElement", function () {
     return JSON.parse(json);
   };
 
-  const getEditorDecorations = (_type) =>
-    editor.getDecorations().filter((d) => d.properties.class.startsWith("color-inline-background"));
+  const getEditorDecorations = (_type, targetEditor = editor) =>
+    targetEditor
+      .getDecorations()
+      .filter((d) => d.properties.class.startsWith("color-inline-background"));
 
   beforeEach(async function () {
     registerViewProvider();
@@ -212,6 +214,7 @@ describe("ColorBufferElement", function () {
       describe("when the current pane is splitted to the right", function () {
         beforeEach(async function () {
           registerViewProvider();
+          await colorBuffer.variablesAvailable();
           // The spec wants the same editor in both panes. `pane:split-right`
           // has not carried the active item across since long before this fork,
           // and the version gate that used to pick between the two read the
@@ -225,10 +228,9 @@ describe("ColorBufferElement", function () {
             "color buffer element",
             () => (colorBufferElement = lumine.views.getView(project.colorBufferForEditor(editor))),
           );
-          await waitsFor(
-            "color buffer element markers",
-            () => getEditorDecorations("background").length,
-          );
+          colorBuffer = project.colorBufferForEditor(editor);
+          await colorBuffer.initialize();
+          await colorBuffer.variablesAvailable();
         });
 
         return it("should keep all the buffer elements attached", async function () {
@@ -239,7 +241,7 @@ describe("ColorBufferElement", function () {
             colorBufferElement = editorElement.querySelector("color-inline-markers");
             expect(colorBufferElement).toExist();
 
-            return expect(getEditorDecorations("background").length).toEqual(4);
+            return expect(getEditorDecorations("background", editor).length).toEqual(4);
           });
         });
       });
@@ -434,6 +436,10 @@ describe("ColorBufferElement", function () {
           }),
         );
 
+        // File-type exclusions use the grammar's scopes, which are available
+        // after its asynchronous tokenization has settled.
+        await editor.languageMode.ready;
+        await editor.languageMode.atTransactionEnd?.();
         await waitsForPromise(() => colorBuffer.initialize());
         await waitsForPromise(() => colorBuffer.variablesAvailable());
       };
@@ -447,12 +453,24 @@ describe("ColorBufferElement", function () {
       describe("with the default wildcard", function () {
         beforeEach(async () => lumine.config.set("color-inline.supportedFiletypes", ["*"]));
 
-        return it("supports every filetype", async function () {
+        it("supports every filetype", async function () {
           await loadBuffer("scope-filter.coffee");
           await runs(() => expect(getEditorDecorations("background").length).toEqual(2));
 
           await loadBuffer("project/vendor/css/variables.less");
           await runs(() => expect(getEditorDecorations("background").length).toEqual(20));
+        });
+
+        return it("keeps an ignored source's local colors when project variables change", async function () {
+          await loadBuffer("project/vendor/css/variables.less");
+          expect(colorBuffer.isIgnored()).toBe(true);
+          expect(getEditorDecorations("background").length).toBe(20);
+          const scanned = spyOn(colorBuffer, "scanBufferForColors").and.callThrough();
+          project.emitter.emit("did-update-variables", { created: [], updated: [], destroyed: [] });
+          await waitsFor(() => scanned.calls.count() > 0);
+          await scanned.calls.mostRecent().returnValue;
+          await colorBuffer.markerUpdatePromise;
+          expect(getEditorDecorations("background").length).toBe(20);
         });
       });
 
@@ -526,6 +544,7 @@ describe("ColorBufferElement", function () {
         await editor.languageMode.ready;
         await editor.languageMode.atTransactionEnd();
         await waitsForPromise(() => colorBuffer.initialize());
+        await waitsForPromise(() => colorBuffer.variablesAvailable());
       });
 
       describe("with one filter", function () {

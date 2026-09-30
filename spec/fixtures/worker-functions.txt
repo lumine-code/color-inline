@@ -1,0 +1,2 @@
+$accent: red;
+$tint: tint($accent, 25%);

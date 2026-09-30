@@ -121,6 +121,8 @@ describe("ColorParser", function () {
   });
 
   itParses("rgb(255,127,0)").asColor(255, 127, 0);
+  itParses("rgb( 255, 127, 0 )").asColor(255, 127, 0);
+  itParses("rgb(\n255,\n127,\n0\n)").asColor(255, 127, 0);
   itParses("RGB(255,127,0)").asColor(255, 127, 0);
   itParses("RgB(255,127,0)").asColor(255, 127, 0);
   itParses("rGb(255,127,0)").asColor(255, 127, 0);
@@ -372,6 +374,7 @@ describe("ColorParser", function () {
   itParses(">YELLOW_GREEN").asColor("#9acd32");
 
   itParses("darken(cyan, 20%)").asColor(0, 153, 153);
+  itParses("darken(  rgb(255,255,255)  ,  100%  )").asColor(0, 0, 0);
   itParses("darken(cyan, 20)").asColor(0, 153, 153);
   itParses("darken(#fff, 100%)").asColor(0, 0, 0);
   itParses("darken(cyan, $r)").asInvalid();

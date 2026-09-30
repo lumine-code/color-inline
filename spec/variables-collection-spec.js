@@ -5,6 +5,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
 const path = require("path");
+require("./helpers/matchers");
 
 const VariablesCollection = require("../lib/variables-collection");
 
@@ -440,6 +441,230 @@ describe("VariablesCollection", function () {
       });
     });
 
+    describe("project collection updates", function () {
+      it("keeps defaults-file color words available when named colors are scoped to sources", function () {
+        const registry = require("../lib/color-expressions");
+        const namedColors = registry.getExpression("color-inline:named_colors");
+        const scopes = namedColors.scopes;
+        namedColors.scopes = ["css", "less"];
+        try {
+          collection.add({
+            ...createVar("@accent", "red", [0, 10], path.normalize("/path/to/.color-inline"), 1),
+            scope: "color-inline",
+          });
+          expect(collection.getVariableByName("@accent").color).toBeColor(255, 0, 0);
+          expect(collection.getContext().scopeFromFileName("/path/to/.color-inline")).toEqual("*");
+        } finally {
+          namedColors.scopes = scopes;
+        }
+      });
+
+      it("evaluates source functions in their language and configured Sass dialect", function () {
+        const sassPath = path.normalize("/path/to/colors.scss");
+        collection.sassScopeSuffix = "compass";
+        collection.addMany([
+          createVar("$base", "#ff0000", [0, 10], sassPath, 1),
+          createVar("$tint", "tint(tint($base, 25%), 25%)", [12, 22], sassPath, 2),
+        ]);
+
+        expect(collection.getVariableByName("$tint").color).toBeColor(255, 239, 239);
+        collection.sassScopeSuffix = "bourbon";
+        collection.evaluateVariableColor(collection.getVariableByName("$tint"), true);
+        expect(collection.getVariableByName("$tint").color).toBeColor(255, 111, 111);
+      });
+
+      it("uses a scanner's explicit source scope while resolving nested aliases", function () {
+        const fixturePath = path.normalize("/path/to/source.txt");
+        collection.addMany([
+          { ...createVar("$base", "#ff0000", [0, 10], fixturePath, 1), scope: "scss:compass" },
+          {
+            ...createVar("$tint", "tint($base, 25%)", [12, 22], fixturePath, 2),
+            scope: "scss:compass",
+          },
+        ]);
+
+        expect(collection.getVariableByName("$tint").color).toBeColor(255, 191, 191);
+        collection.addMany([
+          { ...createVar("$base", "#ff0000", [0, 10], fixturePath, 1), scope: "scss:bourbon" },
+          {
+            ...createVar("$tint", "tint($base, 25%)", [12, 22], fixturePath, 2),
+            scope: "scss:bourbon",
+          },
+        ]);
+        collection.evaluateVariableColor(collection.getVariableByName("$tint"), true);
+        expect(collection.getVariableByName("$tint").color).toBeColor(255, 63, 63);
+      });
+
+      it("removes variables from a rescanned path that now contains none", function () {
+        const otherPath = path.normalize("/path/to/other.styl");
+        collection.addMany([
+          createVar("removed", "#fff", [0, 10], FOO_PATH, 1),
+          createVar("retained", "#000", [0, 10], otherPath, 1),
+        ]);
+
+        collection.updateCollection(
+          [createVar("retained", "#000", [0, 10], otherPath, 1)],
+          [FOO_PATH, otherPath],
+        );
+
+        expect(collection.getVariablesForPath(FOO_PATH)).toEqual([]);
+        expect(collection.getVariablesForPath(otherPath).map((v) => v.name)).toEqual(["retained"]);
+        expect(collection.getVariables().map((v) => v.name)).toEqual(["retained"]);
+      });
+
+      it("keeps last-definition and default precedence when a definition is removed", function () {
+        const first = createVar("shared", "#f00", [0, 10], FOO_PATH, 1);
+        const second = createVar("shared", "#0f0", [12, 22], FOO_PATH, 2);
+        const fallback = createVar("shared", "#00f", [0, 10], "/path/to/.color-inline", 1);
+        fallback.default = true;
+        collection.addMany([first, second, fallback]);
+        collection.add(createVar("alias", "shared", [24, 34], FOO_PATH, 3));
+        expect(collection.getVariableByName("alias").color).toBeColor("#0f0");
+
+        collection.remove(second);
+        expect(collection.getVariableByName("alias").color).toBeColor("#f00");
+        collection.remove(first);
+        expect(collection.getVariableByName("alias").color).toBeColor("#00f");
+        collection.remove(fallback);
+        expect(collection.getVariableByName("alias").isColor).toBeFalsy();
+      });
+
+      it("does not scan every declaration for each unique name in a large source", function () {
+        const variables = Array.from({ length: 512 }, (_, index) =>
+          createVar(`color${index}`, "#abcdef", [index * 20, index * 20 + 18], FOO_PATH, index),
+        );
+        collection.updateCollection(variables);
+        spyOn(collection, "compareVariables").and.callThrough();
+        collection.updateCollection(variables.map((variable) => ({ ...variable })));
+
+        expect(collection.getColorVariables().length).toEqual(512);
+        expect(collection.compareVariables.calls.count()).toBeLessThan(2048);
+        expect(changeSpy.calls.count()).toEqual(1);
+      });
+
+      it("replaces an alias dependency even when both declarations have the same color", function () {
+        collection.addMany([
+          createVar("first", "#f00", [0, 10], FOO_PATH, 1),
+          createVar("second", "#f00", [12, 22], FOO_PATH, 2),
+          createVar("alias", "first", [24, 34], FOO_PATH, 3),
+        ]);
+        collection.add(createVar("alias", "second", [24, 34], FOO_PATH, 3));
+
+        expect(collection.dependencyGraph.first).toBeUndefined();
+        expect(collection.dependencyGraph.second).toEqual(["alias"]);
+        expect(collection.getVariableByName("alias").color.variables).toEqual(["second"]);
+        collection.add(createVar("first", "#00f", [0, 10], FOO_PATH, 1));
+        expect(collection.getVariableByName("alias").color).toBeColor("#f00");
+        collection.add(createVar("second", "#0f0", [12, 22], FOO_PATH, 2));
+        expect(collection.getVariableByName("alias").color).toBeColor("#0f0");
+      });
+
+      it("retains a shared dependency while another declaration still references it", function () {
+        const first = createVar("alias", "base", [12, 22], FOO_PATH, 2);
+        const second = createVar("alias", "base", [24, 34], "/path/to/other.styl", 3);
+        collection.addMany([createVar("base", "#f00", [0, 10], FOO_PATH, 1), first, second]);
+
+        collection.remove(first);
+        expect(collection.dependencyGraph.base).toEqual(["alias"]);
+        collection.add(createVar("base", "#00f", [0, 10], FOO_PATH, 1));
+        expect(second.color).toBeColor("#00f");
+        collection.remove(second);
+        expect(collection.dependencyGraph.base).toBeUndefined();
+      });
+
+      it("yields during a project update and publishes the completed batch once", async function () {
+        const timers = [];
+        spyOn(window, "setTimeout").and.callFake((callback) => timers.push(callback));
+        spyOn(Date, "now").and.returnValues(0, 0, 9);
+        const pending = collection.updateCollectionAsync([
+          createVar("base", "#abcdef", [0, 10], FOO_PATH, 1),
+          createVar("alias", "base", [12, 22], FOO_PATH, 2),
+          createVar("literal", "2px", [24, 34], FOO_PATH, 3),
+        ]);
+
+        expect(timers.length).toEqual(1);
+        expect(changeSpy).not.toHaveBeenCalled();
+        Date.now.and.returnValue(9);
+        timers.shift()();
+        await pending;
+
+        expect(collection.length).toEqual(3);
+        expect(collection.getVariableByName("alias").color).toBeColor("#abcdef");
+        expect(changeSpy.calls.count()).toEqual(1);
+        expect(changeSpy.calls.mostRecent().args[0].created.length).toEqual(3);
+      });
+
+      it("cancels a yielded project update without publishing a partial batch", async function () {
+        const timers = [];
+        let abort = false;
+        spyOn(window, "setTimeout").and.callFake((callback) => timers.push(callback));
+        spyOn(Date, "now").and.returnValues(0, 0, 9);
+        const pending = collection.updateCollectionAsync(
+          [
+            createVar("base", "#abcdef", [0, 10], FOO_PATH, 1),
+            createVar("alias", "base", [12, 22], FOO_PATH, 2),
+          ],
+          undefined,
+          { shouldAbort: () => abort },
+        );
+
+        expect(timers.length).toEqual(1);
+        abort = true;
+        timers.shift()();
+
+        expect(await pending).toBeNull();
+        expect(changeSpy).not.toHaveBeenCalled();
+      });
+
+      it("mirrors worker colors and references without reevaluating or replacing variables", async function () {
+        collection.addMany([
+          createVar("base", "#f00", [0, 10], FOO_PATH, 1),
+          createVar("alias", "base", [12, 22], FOO_PATH, 2),
+        ]);
+        const base = collection.getVariableByName("base");
+        const alias = collection.getVariableByName("alias");
+        const aliasId = alias.id;
+        spyOn(collection, "evaluateVariableColor").and.callThrough();
+        const content = [
+          {
+            ...createVar("base", "#00f", [0, 10], FOO_PATH, 1),
+            isColor: true,
+            color: [0, 0, 255, 1],
+            variables: [],
+          },
+          {
+            ...createVar("alias", "base", [12, 22], FOO_PATH, 2),
+            isColor: true,
+            color: [0, 0, 255, 1],
+            variables: ["base"],
+          },
+        ];
+
+        await collection.updateCollectionAsync(content, [FOO_PATH], { preEvaluated: true });
+
+        expect(collection.getVariableByName("base")).toBe(base);
+        expect(collection.getVariableByName("alias")).toBe(alias);
+        expect(alias.id).toEqual(aliasId);
+        expect(alias.color).toBeColor("#00f");
+        expect(alias.color.variables).toEqual(["base"]);
+        expect(collection.dependencyGraph.base).toEqual(["alias"]);
+        expect(collection.evaluateVariableColor).not.toHaveBeenCalled();
+        expect(content[0].color).toEqual([0, 0, 255, 1]);
+        expect(content[1].variables).toEqual(["base"]);
+
+        await collection.updateCollectionAsync(
+          [createVar("alias", "base", [12, 22], FOO_PATH, 2)],
+          [FOO_PATH],
+          { preEvaluated: true },
+        );
+        expect(collection.getVariableByName("base")).toBeUndefined();
+        expect(collection.getVariableByName("alias")).toBe(alias);
+        expect(alias.isColor).toBeFalsy();
+        expect(collection.getColorVariables()).toEqual([]);
+        expect(collection.evaluateVariableColor).not.toHaveBeenCalled();
+      });
+    });
+
     //#    ########  ########  ######  ########  #######  ########  ########
     //#    ##     ## ##       ##    ##    ##    ##     ## ##     ## ##
     //#    ##     ## ##       ##          ##    ##     ## ##     ## ##
@@ -530,6 +755,71 @@ describe("VariablesCollection", function () {
 
         expect(collection.evaluateVariableColor.calls.count()).toEqual(3);
         expect(complete).toHaveBeenCalledWith([]);
+      });
+    });
+
+    describe("::dispose", function () {
+      it("stops restoration after its collection has been disposed", function () {
+        const frames = [];
+        spyOn(window, "requestAnimationFrame").and.callFake((callback) => frames.push(callback));
+        spyOn(Date, "now").and.returnValues(0, 0, 17);
+        collection.initialized = false;
+        const initialized = jasmine.createSpy("initialized");
+        collection.onceInitialized(initialized);
+        collection.initialize([
+          createVar("first", "1px", [0, 10], FOO_PATH, 1),
+          createVar("second", "2px", [12, 22], FOO_PATH, 2),
+        ]);
+        expect(collection.length).toEqual(1);
+        expect(frames.length).toEqual(1);
+
+        collection.dispose();
+        frames.shift()();
+
+        expect(collection.length).toEqual(1);
+        expect(initialized).not.toHaveBeenCalled();
+      });
+
+      it("stops pending reevaluation without registering colors or invoking completion", function () {
+        collection.addMany([
+          createVar("first", "1px", [0, 10], FOO_PATH, 1),
+          createVar("second", "2px", [12, 22], FOO_PATH, 2),
+        ]);
+        const frames = [];
+        spyOn(window, "requestAnimationFrame").and.callFake((callback) => frames.push(callback));
+        spyOn(Date, "now").and.returnValues(0, 0, 17);
+        spyOn(collection, "evaluateVariableColor").and.callFake((variable) => {
+          variable.isColor = true;
+        });
+        spyOn(collection, "updateColorVariablesExpression").and.callThrough();
+        const complete = jasmine.createSpy("complete");
+        collection.evaluateVariables(collection.getVariables(), complete);
+        expect(collection.evaluateVariableColor.calls.count()).toEqual(1);
+        expect(frames.length).toEqual(1);
+
+        collection.dispose();
+        frames.shift()();
+
+        expect(collection.evaluateVariableColor.calls.count()).toEqual(1);
+        expect(collection.updateColorVariablesExpression).not.toHaveBeenCalled();
+        expect(complete).not.toHaveBeenCalled();
+      });
+
+      it("stops a pending worker-state update without emitting a change", async function () {
+        const timers = [];
+        spyOn(window, "setTimeout").and.callFake((callback) => timers.push(callback));
+        spyOn(Date, "now").and.returnValues(0, 0, 9);
+        const pending = collection.updateCollectionAsync([
+          createVar("first", "1px", [0, 10], FOO_PATH, 1),
+          createVar("second", "2px", [12, 22], FOO_PATH, 2),
+        ]);
+        expect(timers.length).toEqual(1);
+
+        collection.dispose();
+        timers.shift()();
+
+        expect(await pending).toBeNull();
+        expect(changeSpy).not.toHaveBeenCalled();
       });
     });
 
