@@ -47,6 +47,7 @@ describe("color-inline bootstrap", () => {
         ignoredNames: ["temporary/*"],
         paths: [],
         variables: { content: [{ name: "saved", value: "1", path: "saved.css" }] },
+        buffers: { unused: { colorMarkers: [] } },
       };
       lumine.packages.setPackageState("color-inline", { project: projectState });
 
@@ -66,9 +67,17 @@ describe("color-inline bootstrap", () => {
       lumine.packages.setPackageState("color-inline", previousState);
     });
 
-    it("leaves an empty workspace's cached index untouched without restoring or rescanning it", async () => {
+    it("saves only settings from an unopened cached project without restoring or rescanning it", async () => {
       const pack = await lumine.packages.startPackage("color-inline");
       await Promise.resolve();
+
+      const serialized = pack.mainModule.serialize().project;
+      expect(serialized.ignoredNames).toEqual(["temporary/*"]);
+      expect(serialized.paths).toBeUndefined();
+      expect(serialized.variables).toBeUndefined();
+      expect(serialized.buffers).toBeUndefined();
+      expect(projectState.variables).toBeDefined();
+      expect(projectState.buffers).toBeDefined();
 
       expect(pack.mainModule.project).toBeNull();
       expect(ColorProject.deserialize).not.toHaveBeenCalled();
@@ -87,6 +96,7 @@ describe("color-inline bootstrap", () => {
       expect(serialized.ignoredNames).toEqual(["temporary/*"]);
       expect(serialized.paths).toBeUndefined();
       expect(serialized.variables).toBeUndefined();
+      expect(serialized.buffers).toBeUndefined();
     });
 
     it("also starts for an untitled document", async () => {

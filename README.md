@@ -48,7 +48,7 @@ Variables are scanned from the files matching the `sourceNames` setting, which c
 
 The scan uses the editor's bundled ripgrep to find candidate files and honours the repository's ignore rules; `ignoredNames` excludes further paths, and a pattern naming a directory excludes everything beneath it.
 
-The project index stays in memory and is rebuilt when an editor or a colour command first needs it. Window state saves project settings and editor marks, without the scanned paths and variables; an empty workspace starts no scan.
+The project index stays in memory and is rebuilt when an editor or a colour command first needs it. Window state saves only project settings; scanned paths, variables and colour marks are rebuilt from the files and open editors. An empty workspace starts no scan.
 
 ## Customization
 

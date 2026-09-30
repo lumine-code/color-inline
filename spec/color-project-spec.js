@@ -186,7 +186,6 @@ describe("ColorProject", function () {
           ignoredNames: ["vendor/*"],
           sourceNames: ["*.less"],
           ignoredScopes: ["\\.comment"],
-          buffers: {},
         };
         return expect(project.serialize()).toEqual(expected);
       }));
@@ -346,7 +345,6 @@ describe("ColorProject", function () {
           markersVersion: SERIALIZE_MARKERS_VERSION,
           globalSourceNames: ["*.styl"],
           globalIgnoredNames: [],
-          buffers: {},
         });
       }));
 

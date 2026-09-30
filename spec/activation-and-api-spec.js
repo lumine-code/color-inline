@@ -74,7 +74,6 @@ describe("Color Inline", function () {
         markersVersion: SERIALIZE_MARKERS_VERSION,
         globalSourceNames: ["**/*.sass", "**/*.styl"],
         globalIgnoredNames: [],
-        buffers: {},
       },
     });
   });
