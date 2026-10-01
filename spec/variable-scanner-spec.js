@@ -44,6 +44,19 @@ describe("VariableScanner line tracking", function () {
     expect(characters.calls.count()).toBeLessThan(text.length * 2);
   });
 
+  it("rejects unfinished CSS declarations with long whitespace runs promptly", function () {
+    scanner = new VariableScanner({ registry, scope: "css" });
+    const started = Date.now();
+    expect(scanner.search(`--theme:${" ".repeat(50000)}!`)).toBeUndefined();
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  it("preserves CSS values after leading whitespace, including whitespace-only values", function () {
+    scanner = new VariableScanner({ registry, scope: "css" });
+    expect(scanner.search("--color:   #ffffff;")[0].value).toBe("#ffffff");
+    expect(scanner.search("--blank: \t;")[0].value).toBe("\t");
+  });
+
   it("reuses the regexp and refreshes it when the registry changes", function () {
     const ExpressionsRegistry = require("../lib/expressions-registry");
     const VariableExpression = require("../lib/variable-expression");

@@ -1,25 +1,24 @@
 const path = require("path");
+const { EventEmitter } = require("events");
 
 describe("PathsLoader", () => {
   let loader;
   const root = path.join(__dirname, "fixtures", "project");
 
   beforeEach(() => {
+    jasmine.useRealClock();
     loader = require("../lib/paths-loader");
   });
 
-  it("excludes dependency directories before paths reach the renderer", async () => {
-    const emitted = [];
-    const crawl = lumine.project.crawl.bind(lumine.project);
-    spyOn(lumine.project, "crawl").and.callFake((options) =>
-      crawl({
-        ...options,
-        didFindPaths: (paths) => {
-          emitted.push(...paths);
-          options.didFindPaths(paths);
-        },
-      }),
-    );
+  it("filters source paths in a separate process and excludes dependency directories", async () => {
+    const { Task } = require("lumine");
+    const start = Task.prototype.start;
+    const workerPids = [];
+    spyOn(Task.prototype, "start").and.callFake(function (...args) {
+      workerPids.push(this.childProcess.pid);
+      return start.apply(this, args);
+    });
+    spyOn(lumine.project, "crawl").and.throwError("renderer must not enumerate project files");
 
     const { dirtied } = await loader.loadPaths({
       paths: [root],
@@ -32,10 +31,9 @@ describe("PathsLoader", () => {
       path.join(root, "styles", "buttons.styl"),
       path.join(root, "styles", "variables.styl"),
     ]);
-    expect(emitted).not.toContain(path.join(root, "vendor", "css", "variables.less"));
-    const options = lumine.project.crawl.calls.first().args[0];
-    expect(options.ignoredNames).toEqual(["vendor"]);
-    expect(options.inclusion).toBeUndefined();
+    expect(workerPids.length).toBe(1);
+    expect(workerPids[0]).not.toBe(process.pid);
+    expect(lumine.project.crawl).not.toHaveBeenCalled();
   });
 
   it("preserves relative paths returned by listFiles", async () => {
@@ -45,8 +43,52 @@ describe("PathsLoader", () => {
     expect(files.every((filePath) => !path.isAbsolute(filePath))).toBe(true);
   });
 
-  it("passes the project's VCS and symlink settings to the crawler", async () => {
-    spyOn(lumine.project, "crawl").and.returnValue(Promise.resolve());
+  it("checks known timestamps and missing paths entirely inside the worker", async () => {
+    const knownPaths = [
+      path.join(root, "styles", "buttons.styl"),
+      path.join(root, "styles", "variables.styl"),
+      path.join(root, "styles", "missing.styl"),
+    ];
+    const result = await loader.loadPaths({
+      paths: [root],
+      sourceNames: ["*.styl"],
+      knownPaths,
+      timestamp: new Date(Date.now() + 60000),
+    });
+
+    expect(result.dirtied).toEqual([]);
+    expect(result.removed).toEqual([knownPaths[2]]);
+  });
+
+  it("preserves a private extra ignore predicate for unchanged source candidates", async () => {
+    const knownPaths = [
+      path.join(root, "styles", "buttons.styl"),
+      path.join(root, "styles", "variables.styl"),
+    ];
+    const result = await loader.loadPaths({
+      paths: [root],
+      sourceNames: ["*.styl"],
+      knownPaths,
+      timestamp: new Date(Date.now() + 60000),
+      isIgnored: (relativePath) => relativePath.endsWith("variables.styl"),
+    });
+
+    expect(result.dirtied).toEqual([]);
+    expect(result.removed).toEqual([knownPaths[1]]);
+  });
+
+  it("passes VCS and symlink options to the path worker", async () => {
+    const task = {
+      childProcess: new EventEmitter(),
+      on: () => ({ dispose() {} }),
+      start: jasmine
+        .createSpy("start")
+        .and.callFake((_options, complete) =>
+          queueMicrotask(() => complete({ dirtied: [], removed: [] })),
+        ),
+      terminate() {},
+    };
+    spyOn(require("lumine"), "Task").and.returnValue(task);
 
     await loader.loadPaths({
       paths: [root],
@@ -54,18 +96,23 @@ describe("PathsLoader", () => {
       traverseIntoSymlinkDirectories: true,
     });
 
-    const options = lumine.project.crawl.calls.first().args[0];
-    expect(options.directoryPaths).toEqual([root]);
-    expect(options.useCoreIgnoredNames).toBe(false);
-    expect(options.followSymlinks).toBe(true);
-    expect(options.excludeVcsIgnoredPaths).toBe(false);
+    const options = task.start.calls.first().args[0];
+    expect(options.paths).toEqual([root]);
+    expect(options.traverseIntoSymlinkDirectories).toBe(true);
+    expect(options.ignoreVcsIgnores).toBe(false);
+    expect(options.sourceNames).toBeUndefined();
   });
 
-  it("cancels an active crawl without reporting known paths as removed", async () => {
-    let finish;
-    const crawl = new Promise((resolve) => (finish = resolve));
-    crawl.cancel = jasmine.createSpy("cancel").and.callFake(() => finish());
-    spyOn(lumine.project, "crawl").and.returnValue(crawl);
+  it("cancels without reporting known paths as removed and lets the worker stop its crawl", async () => {
+    let complete;
+    const task = {
+      childProcess: new EventEmitter(),
+      on: () => ({ dispose() {} }),
+      start: (_options, callback) => (complete = callback),
+      send: jasmine.createSpy("send"),
+      terminate: jasmine.createSpy("terminate"),
+    };
+    spyOn(require("lumine"), "Task").and.returnValue(task);
     const controller = new AbortController();
 
     const pending = loader.loadPaths({
@@ -76,11 +123,14 @@ describe("PathsLoader", () => {
     controller.abort();
 
     expect(await pending).toEqual({ dirtied: [], removed: [] });
-    expect(crawl.cancel).toHaveBeenCalledTimes(1);
+    expect(task.send.calls.first().args[0].event).toBe("color-inline:cancel-paths");
+    expect(task.terminate).not.toHaveBeenCalled();
+    complete({ dirtied: [], removed: [] });
+    expect(task.terminate).toHaveBeenCalledTimes(1);
   });
 
-  it("does not start a crawl after cancellation", async () => {
-    spyOn(lumine.project, "crawl");
+  it("does not start a worker after cancellation", async () => {
+    const Task = spyOn(require("lumine"), "Task");
     const controller = new AbortController();
     controller.abort();
 
@@ -88,6 +138,6 @@ describe("PathsLoader", () => {
       dirtied: [],
       removed: [],
     });
-    expect(lumine.project.crawl).not.toHaveBeenCalled();
+    expect(Task).not.toHaveBeenCalled();
   });
 });

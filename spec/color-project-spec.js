@@ -114,6 +114,76 @@ describe("ColorProject", function () {
     expect(snapshots[1]).toContain("first-result");
     expect(project.getVariableByName("first-result")).toBeDefined();
     expect(project.getVariableByName("second-result")).toBeDefined();
+    expect(snapshots.length).toBe(2);
+  });
+
+  it("retries a worker snapshot after a source was removed while it was scanning", async () => {
+    await project.initialize();
+    const [removedPath, scannedPath] = project.getPaths();
+    const snapshot = () => {
+      const variables = project.variables.serialize().content;
+      variables.preEvaluated = true;
+      variables.paths = project.getPaths().slice();
+      return variables;
+    };
+    const stale = snapshot();
+    let finishScan;
+    const workerStates = [];
+    spyOn(project, "loadVariablesForPaths").and.callFake(() => {
+      workerStates.push(project.variables.serialize().content);
+      if (workerStates.length === 1) {
+        return new Promise((resolve) => (finishScan = resolve));
+      }
+      const fresh = snapshot();
+      fresh.push({
+        name: "fresh-result",
+        path: scannedPath,
+        value: "#abc",
+        range: [1000, 1004],
+        line: 100,
+        isColor: true,
+        color: [170, 187, 204, 1],
+      });
+      return Promise.resolve(fresh);
+    });
+
+    const pending = project.scanAndUpdateVariables([scannedPath]);
+    await flushMicrotasks();
+    expect(workerStates.length).toBe(1);
+    project.deleteVariablesForPath(removedPath);
+    expect(project.getVariablesForPath(removedPath)).toEqual([]);
+    finishScan(stale);
+    await pending;
+
+    expect(workerStates.length).toBe(2);
+    expect(workerStates[1].some((variable) => variable.path === removedPath)).toBe(false);
+    expect(project.getVariablesForPath(removedPath)).toEqual([]);
+    expect(project.getVariableByName("fresh-result")).toBeDefined();
+  });
+
+  it("rechecks a worker snapshot after waiting for the collection update queue", async () => {
+    await project.initialize();
+    const [removedPath, scannedPath] = project.getPaths();
+    let releaseIngestion;
+    project.variablesUpdatePromise = new Promise((resolve) => (releaseIngestion = resolve));
+    let scans = 0;
+    spyOn(project, "loadVariablesForPaths").and.callFake(() => {
+      scans++;
+      const variables = project.variables.serialize().content;
+      variables.preEvaluated = true;
+      variables.paths = project.getPaths().slice();
+      return Promise.resolve(variables);
+    });
+
+    const pending = project.scanAndUpdateVariables([scannedPath]);
+    await flushMicrotasks();
+    expect(scans).toBe(1);
+    project.deleteVariablesForPath(removedPath);
+    releaseIngestion();
+    await pending;
+
+    expect(scans).toBe(2);
+    expect(project.getVariablesForPath(removedPath)).toEqual([]);
   });
 
   describe(".deserialize", function () {

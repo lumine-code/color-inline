@@ -616,6 +616,47 @@ describe("VariablesCollection", function () {
         expect(changeSpy).not.toHaveBeenCalled();
       });
 
+      it("finishes reference cleanup when a competing deletion interrupts a yielded removal", function () {
+        collection.addMany([
+          createVar("first", "#f00", [0, 10], FOO_PATH, 1),
+          createVar("second", "#00f", [12, 22], FOO_PATH, 2),
+        ]);
+        const steps = collection.updateCollectionSteps([], [FOO_PATH], true);
+        steps.next(); // Group the requested path.
+        steps.next(); // Find the first retired declaration.
+        steps.next(); // Find the second retired declaration.
+        steps.next(); // Remove the first declaration's indexes, then yield.
+
+        collection.deleteVariablesForPaths([FOO_PATH]);
+        steps.return();
+
+        expect(collection.getVariables()).toEqual([]);
+        expect(collection.getVariablesForPath(FOO_PATH)).toEqual([]);
+        expect(collection.variableNames).toEqual([]);
+        expect(collection.variableNameCounts.size).toEqual(0);
+        expect(collection.variablesByName.size).toEqual(0);
+        collection.add(createVar("first", "#0f0", [0, 10], FOO_PATH, 1));
+        expect(collection.getVariablesForPath(FOO_PATH).length).toEqual(1);
+        expect(collection.getVariableByName("first").color).toBeColor("#0f0");
+      });
+
+      it("keeps a reset collection intact when an obsolete removal is cancelled", function () {
+        collection.add(createVar("first", "#f00", [0, 10], FOO_PATH, 1));
+        const steps = collection.updateCollectionSteps([], [FOO_PATH], true);
+        steps.next();
+        steps.next();
+        steps.next();
+        collection.reset();
+        collection.add(createVar("first", "#0f0", [0, 10], FOO_PATH, 1));
+
+        steps.return();
+
+        expect(collection.getVariablesForPath(FOO_PATH).length).toEqual(1);
+        expect(collection.variableNames).toEqual(["first"]);
+        expect(collection.variableNameCounts.get("first")).toEqual(1);
+        expect(collection.getVariableByName("first").color).toBeColor("#0f0");
+      });
+
       it("mirrors worker colors and references without reevaluating or replacing variables", async function () {
         collection.addMany([
           createVar("base", "#f00", [0, 10], FOO_PATH, 1),
