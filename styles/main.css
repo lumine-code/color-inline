@@ -344,7 +344,7 @@ color-inline-color-results {
     .results-view {
       overflow: auto;
       position: relative;
-      padding: 0 var(--component-padding);
+      padding: 0 var(--ui-spacing);
       -webkit-flex: 1;
 
       .line-number {
@@ -416,7 +416,7 @@ color-inline-palette {
   }
 
   li {
-    padding: var(--component-padding);
+    padding: var(--ui-spacing);
     list-style: none;
     border-bottom: 1px solid var(--base-border-color);
     display: -webkit-flex;
@@ -458,7 +458,7 @@ color-inline-palette {
     display: inline-block;
     background: var(--syntax-background-color);
     box-sizing: border-box;
-    padding: var(--component-padding);
+    padding: var(--ui-spacing);
     width: 100%;
   }
 
@@ -501,7 +501,7 @@ color-inline-palette {
     position: relative;
     width: 3em;
     height: 3em;
-    margin-right: var(--component-padding);
+    margin-right: var(--ui-spacing);
     z-index: 0;
 
     &:before {
@@ -524,7 +524,7 @@ color-inline-palette {
     background: var(--input-background-color);
     border: 1px solid var(--input-border-color);
     color: var(--text-color);
-    font-family: var(--font-family);
+    font-family: var(--ui-font-family);
   }
 
   .settings-view input[type="checkbox"] {
@@ -549,7 +549,7 @@ color-inline-palette {
 
   .color-inline-palette-controls-wrapper {
     border-bottom: 1px solid var(--base-border-color);
-    padding: var(--component-padding);
+    padding: var(--ui-spacing);
     width: 100%;
   }
 
@@ -571,17 +571,17 @@ color-inline-color-project {
 
   .header {
     border-bottom: 1px solid var(--input-border-color);
-    padding-bottom: var(--component-padding) * 2;
+    padding-bottom: var(--ui-spacing) * 2;
     text-align: left;
     overflow: hidden;
 
     .logo {
       float: left;
-      margin-right: var(--component-padding);
+      margin-right: var(--ui-spacing);
     }
 
     p {
-      margin: (var(--component-padding) * 1.5) 0 0;
+      margin: (var(--ui-spacing) * 1.5) 0 0;
     }
   }
 
@@ -604,7 +604,7 @@ color-inline-color-project {
   }
 
   .control-group {
-    margin-bottom: var(--component-padding) * 2;
+    margin-bottom: var(--ui-spacing) * 2;
 
     &.boolean {
       padding-left: 150px;
@@ -634,7 +634,7 @@ color-inline-color-project {
 
         & > div:first-child {
           flex: 1 1 0;
-          padding-right: var(--component-padding) * 2;
+          padding-right: var(--ui-spacing) * 2;
         }
       }
 
@@ -650,7 +650,7 @@ color-inline-color-project {
           display: flex;
         }
         .control-label {
-          padding-right: var(--component-padding);
+          padding-right: var(--ui-spacing);
         }
         .setting-description {
           margin: 0;
@@ -660,7 +660,7 @@ color-inline-color-project {
   }
 
   .fields {
-    margin-top: var(--component-padding) * 2;
+    margin-top: var(--ui-spacing) * 2;
   }
 
   .fields .controls,
@@ -673,14 +673,14 @@ color-inline-color-project {
       text-align: center;
       font-size: 1.6em;
       font-weight: normal;
-      margin-bottom: var(--component-padding) * 2;
+      margin-bottom: var(--ui-spacing) * 2;
     }
   }
   .control-label {
     margin: 0;
     line-height: 2em;
     width: 150px;
-    padding-right: var(--component-padding);
+    padding-right: var(--ui-spacing);
   }
 
   .control-wrapper {

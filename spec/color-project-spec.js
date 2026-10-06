@@ -1141,9 +1141,43 @@ describe("ColorProject", function () {
         return lumine.themes.unwatchUserStylesheet();
       });
 
-      return it("returns an array of 62 variables", async function () {
+      it("samples every public color and excludes dimensions and runtime typography", function () {
         const themeVariables = project.loadThemesVariables();
-        return expect(themeVariables.length).toEqual(62);
+        const names = lumine.themes
+          .getVariables()
+          .filter(({ type }) => type === "color")
+          .map(({ name }) => `@${name}`);
+        expect(themeVariables.map(({ name }) => name)).toEqual(names);
+        expect(new Set(themeVariables.map(({ name }) => name)).size).toBe(names.length);
+        expect(document.querySelector(".color-inline-sampler")).toBeNull();
+      });
+
+      it("resolves derived colors and direct component overrides from the active cascade", function () {
+        const stylesheet = lumine.styles.addStyleSheet(
+          `:root {
+            --text-color-success: rgb(10, 20, 30);
+            --text-color-added: var(--text-color-success);
+            --tooltip-background-color: rgb(40, 50, 60);
+            --text-color-on-success: lch(100 0 0);
+          }`,
+          { priority: 3 },
+        );
+        try {
+          const values = new Map(
+            project.loadThemesVariables().map(({ name, value }) => [name, value]),
+          );
+          expect(values.get("@text-color-added")).toBe("rgb(10, 20, 30)");
+          expect(values.get("@tooltip-background-color")).toBe("rgb(40, 50, 60)");
+          expect(values.get("@text-color-on-success")).toBe("rgba(255, 255, 255, 1)");
+        } finally {
+          stylesheet.dispose();
+        }
+      });
+
+      return it("removes the sampler when resolving a color fails", function () {
+        spyOn(window, "getComputedStyle").and.throwError("sampling failed");
+        expect(() => project.loadThemesVariables()).toThrowError("sampling failed");
+        expect(document.querySelector(".color-inline-sampler")).toBeNull();
       });
     });
 
@@ -1177,7 +1211,43 @@ describe("ColorProject", function () {
       });
 
       it("includes the variables set for ui and syntax themes in the palette", async () =>
-        expect(project.getColorVariables().length).toEqual(72));
+        expect(project.getColorVariables().length).toEqual(
+          TOTAL_COLORS_VARIABLES_IN_PROJECT +
+            lumine.themes.getVariables().filter(({ type }) => type === "color").length,
+        ));
+
+      it("refreshes included accent colors on a system accent change and removal without a theme swap", async function () {
+        const value = (name) =>
+          project.getColorVariables().find((variable) => variable.name === name).value;
+        const originalValue = value("@accent-indicator-color");
+        const originalSource = lumine.config.get("theme.accentSource");
+        const originalAccent = lumine.themes.systemAccentColor;
+        const themeSwitches = spy.calls.count();
+        spyOn(lumine.themes.applicationDelegate, "invokeApp").and.returnValue(
+          Promise.resolve("#123456"),
+        );
+        try {
+          lumine.config.set("theme.accentSource", "system");
+          await lumine.themes.refreshSystemAccentColor();
+          await flushMicrotasks();
+          expect(value("@accent-indicator-color")).toBe("rgb(18, 52, 86)");
+          expect(value("@accent-background-color")).toBe("rgb(18, 52, 86)");
+          lumine.themes.systemAccentColor = "#654321";
+          lumine.themes.applyAccentColor();
+          await flushMicrotasks();
+          expect(value("@accent-indicator-color")).toBe("rgb(101, 67, 33)");
+          expect(value("@accent-background-color")).toBe("rgb(101, 67, 33)");
+          lumine.config.set("theme.accentSource", "theme");
+          lumine.themes.applyAccentColor();
+          await flushMicrotasks();
+          expect(value("@accent-indicator-color")).toBe(originalValue);
+          expect(spy.calls.count()).toBe(themeSwitches);
+        } finally {
+          lumine.config.set("theme.accentSource", originalSource);
+          lumine.themes.systemAccentColor = originalAccent;
+          lumine.themes.applyAccentColor();
+        }
+      });
 
       it("still includes the paths from the project", async () =>
         paths.map((p) => expect(project.getPaths().indexOf(p)).not.toEqual(-1)));
