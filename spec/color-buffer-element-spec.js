@@ -114,6 +114,39 @@ describe("ColorBufferElement", function () {
       it("creates markers views for every visible buffer marker", async () =>
         expect(getEditorDecorations("background").length).toEqual(3));
 
+      it("refreshes annotation contrast when user styles change the syntax background", async () => {
+        const themes = lumine.themes.getActiveThemeNames();
+        const originalText = editor.getText();
+        const white = lumine.styles.addStyleSheet(
+          ":root { --syntax-background-color: white; } lumine-text-editor:not([mini]) { background-color: var(--syntax-background-color); }",
+          { priority: 2 },
+        );
+        let dark;
+        try {
+          editor.setText("color: rgba(70, 72, 83, 0.06)");
+          editor.setCursorBufferPosition([0, 0]);
+          await colorBuffer.update();
+          await waitForFrames(() => editorElement.querySelector(".color-inline-background"));
+          expect(
+            getComputedStyle(editorElement.querySelector(".color-inline-background")).color,
+          ).toBe("rgb(0, 0, 0)");
+          dark = lumine.styles.addStyleSheet(
+            ":root { --syntax-background-color: color-mix(in srgb, #102030, #102030); }",
+            { priority: 2 },
+          );
+          await waitForFrames(() => {
+            const annotation = editorElement.querySelector(".color-inline-background");
+            return annotation && getComputedStyle(annotation).color === "rgb(255, 255, 255)";
+          });
+          expect(lumine.themes.getActiveThemeNames()).toEqual(themes);
+          expect(colorBuffer.getValidColorMarkers().length).toBe(1);
+        } finally {
+          dark?.dispose();
+          white.dispose();
+          editor.setText(originalText);
+        }
+      });
+
       describe("when the project variables are initialized", () =>
         it("creates markers for the new valid colors", async function () {
           await waitsForPromise(() => colorBuffer.variablesAvailable());
@@ -717,6 +750,32 @@ describe("ColorBufferElement decoration styles", function () {
       element.editorElement = host.firstElementChild;
 
       return expect(element.getEditorBackgroundColor()).toBeColor(128, 128, 128, 1);
+    });
+
+    it("reads modern computed color spaces through the browser's sRGB conversion", () => {
+      host.innerHTML = "<div></div>";
+      element.editorElement = host.firstElementChild;
+      for (const value of ["color(srgb 0.1 0.2 0.3)", "lch(0% 0 0)", "color(display-p3 1 1 1)"]) {
+        element.editorElement.style.backgroundColor = value;
+        const backdrop = element.getEditorBackgroundColor();
+        expect(backdrop).withContext(value).not.toBeNull();
+        expect(backdrop.alpha).toBe(1);
+        if (value.startsWith("lch")) expect(backdrop).toBeColor(0, 0, 0, 1);
+        else if (value.includes("display-p3")) expect(backdrop).toBeColor(255, 255, 255, 1);
+        else expect(backdrop).toBeColor(26, 51, 77, 1);
+      }
+    });
+
+    it("composites a modern translucent layer over its parent", () => {
+      host.style.backgroundColor = "white";
+      host.innerHTML = "<div style='background-color: color(srgb 0 0 0 / 0.5)'></div>";
+      element.editorElement = host.firstElementChild;
+      const backdrop = element.getEditorBackgroundColor();
+      expect(backdrop.alpha).toBe(1);
+      for (const channel of backdrop.rgb) {
+        expect(channel).toBeGreaterThanOrEqual(127);
+        expect(channel).toBeLessThanOrEqual(128);
+      }
     });
 
     return it("returns null when the background cannot be read", function () {
