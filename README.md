@@ -2,6 +2,8 @@
 
 Show colors inline and collect them across the project.
 
+Fork of [abe33/atom-pigments](https://github.com/abe33/atom-pigments).
+
 Every colour in an open file is marked where it is written, and the variables a project declares are scanned so that a name resolves to the colour it stands for, wherever it was defined.
 
 ## Features
