@@ -27,7 +27,7 @@ if (context.isInvalid(color)) return (this.invalid = true);
 
 In the example above, the `readPercent` and `readColor` methods are used to retrieve the proper value without caring whether the initial value was a literal value or a reference to a variable. The context will resolve that for us. And it will also keep track of all the variables used during the parsing so that Color Inline can build the dependency tree for the resulting color.
 
-As expression handler functions can't rely on their scope, the context will also provide some utilities to simplify the works of parsing complex expressions.
+Contributed expression handlers retain their module scope. The context also provides utilities for parsing complex expressions and resolving their variables.
 
 ### Value Retrieval Methods
 

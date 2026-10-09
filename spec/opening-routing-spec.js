@@ -1,16 +1,17 @@
-const main = require("../lib/main");
 const uris = require("../lib/uris");
 
 describe("color-inline workspace views", () => {
-  let previousProject;
+  let main, previousProject;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    main = (await lumine.packages.activatePackage("color-inline")).mainModule;
     previousProject = main.project;
     main.project = { initialize: jasmine.createSpy("initialize").and.resolveTo() };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     main.project = previousProject;
+    await lumine.packages.deactivatePackage("color-inline");
   });
 
   it("opens search, palette, and settings through the workspace", async () => {

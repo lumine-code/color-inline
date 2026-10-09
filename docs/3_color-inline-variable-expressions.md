@@ -36,11 +36,11 @@ Required fields:
 
 Optional fields:
 
-| field      | type            | default | meaning                                                                                    |
-| ---------- | --------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `handle`   | `Function`      | —       | `(match, expression, context)`; pushes results with `this.addVariable(name, value, range)` |
-| `scopes`   | `Array<String>` | `['*']` | which languages it applies to                                                              |
-| `priority` | `Number`        | `0`     | higher wins where two expressions match the same text                                      |
+| field      | type            | default | meaning                                                                                                                                         |
+| ---------- | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handle`   | `Function`      | —       | `(match, solver)`; pushes results with `solver.appendResult(name, value, startIndex, endIndex)` and finishes with `solver.endParsing(endIndex)` |
+| `scopes`   | `Array<String>` | `['*']` | which languages it applies to                                                                                                                   |
+| `priority` | `Number`        | `0`     | higher wins where two expressions match the same text                                                                                           |
 
 Without a `handle`, the first two capture groups are taken as the name and the value, which covers most `name: value` syntaxes.
 
