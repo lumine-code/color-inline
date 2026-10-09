@@ -1,0 +1,322 @@
+{
+  "source": "ianstormtaylor/css-color-function",
+  "revision": "707ce106bd7430c71ec2209ee10335caa68f9b56",
+  "rows": [
+    {
+      "input": "color(red red(25))",
+      "rgba": [25, 0, 0, 1]
+    },
+    {
+      "input": "color(black red(10%))",
+      "rgba": [26, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(100, 0, 0) red(+ 25))",
+      "rgba": [125, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(50, 0, 0) red(+ 10%))",
+      "rgba": [55, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(50, 0, 0) red(- 25))",
+      "rgba": [25, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(50, 0, 0) red(- 10%))",
+      "rgba": [45, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(250, 0, 0) red(* .1))",
+      "rgba": [25, 0, 0, 1]
+    },
+    {
+      "input": "color(rgb(250, 0, 0) red(* 10%))",
+      "rgba": [25, 0, 0, 1]
+    },
+    {
+      "input": "color(green green(25))",
+      "rgba": [0, 25, 0, 1]
+    },
+    {
+      "input": "color(black green(10%))",
+      "rgba": [0, 26, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 100, 0) green(+ 25))",
+      "rgba": [0, 125, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 50, 0) green(+ 10%))",
+      "rgba": [0, 55, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 50, 0) green(- 25))",
+      "rgba": [0, 25, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 50, 0) green(- 10%))",
+      "rgba": [0, 45, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 250, 0) green(* .1))",
+      "rgba": [0, 25, 0, 1]
+    },
+    {
+      "input": "color(rgb(0, 250, 0) green(* 10%))",
+      "rgba": [0, 25, 0, 1]
+    },
+    {
+      "input": "color(blue blue(25))",
+      "rgba": [0, 0, 25, 1]
+    },
+    {
+      "input": "color(blue blue(10%))",
+      "rgba": [0, 0, 26, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 100) blue(+ 25))",
+      "rgba": [0, 0, 125, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 50) blue(+ 10%))",
+      "rgba": [0, 0, 55, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 50) blue(- 25))",
+      "rgba": [0, 0, 25, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 50) blue(- 10%))",
+      "rgba": [0, 0, 45, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 250) blue(* .1))",
+      "rgba": [0, 0, 25, 1]
+    },
+    {
+      "input": "color(rgb(0, 0, 250) blue(* 10%))",
+      "rgba": [0, 0, 25, 1]
+    },
+    {
+      "input": "color(black alpha(.5))",
+      "rgba": [0, 0, 0, 0.5]
+    },
+    {
+      "input": "color(black alpha(42%))",
+      "rgba": [0, 0, 0, 0.42]
+    },
+    {
+      "input": "color(rgba(0,0,0,0) alpha(+ .1))",
+      "rgba": [0, 0, 0, 0.1]
+    },
+    {
+      "input": "color(rgba(0,0,0,.5) alpha(+ 10%))",
+      "rgba": [0, 0, 0, 0.55]
+    },
+    {
+      "input": "color(black alpha(- .1))",
+      "rgba": [0, 0, 0, 0.9]
+    },
+    {
+      "input": "color(black alpha(- 10%))",
+      "rgba": [0, 0, 0, 0.9]
+    },
+    {
+      "input": "color(rgba(0,0,0,.2) alpha(* .5))",
+      "rgba": [0, 0, 0, 0.1]
+    },
+    {
+      "input": "color(rgba(0,0,0,.2) alpha(* 50%))",
+      "rgba": [0, 0, 0, 0.1]
+    },
+    {
+      "input": "color(hsl(34, 50%, 50%) hue(25))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(34, 50%, 50%) hue(385))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(34, 50%, 50%) hue(-369))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(10, 50%, 50%) hue(+ 15))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(40, 50%, 50%) hue(- 15))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(10, 50%, 50%) hue(* 2.5))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(240, 50%, 50%) hue(+ 240))",
+      "rgba": [64, 191, 64, 1]
+    },
+    {
+      "input": "color(hsl(120, 50%, 50%) hue(- 240))",
+      "rgba": [64, 64, 191, 1]
+    },
+    {
+      "input": "color(hsl(25, 0%, 50%) saturation(50%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 25%, 50%) saturation(+ 25%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 60%, 50%) saturation(- 10%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 25%, 50%) saturation(* 2))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 50%, 0%) lightness(50%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 50%, 25%) lightness(+ 25%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 50%, 60%) lightness(- 10%))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hsl(25, 50%, 25%) lightness(* 2))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 0%) whiteness(20%))",
+      "rgba": [255, 51, 51, 1]
+    },
+    {
+      "input": "color(hwb(0, 75%, 0%) whiteness(+25%))",
+      "rgba": [255, 255, 255, 1]
+    },
+    {
+      "input": "color(hwb(0, 30%, 0%) whiteness(-10%))",
+      "rgba": [255, 51, 51, 1]
+    },
+    {
+      "input": "color(hwb(0, 50%, 0%) whiteness(*2))",
+      "rgba": [255, 255, 255, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 0%) blackness(20%))",
+      "rgba": [204, 0, 0, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 75%) blackness(+25%))",
+      "rgba": [0, 0, 0, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 30%) blackness(-10%))",
+      "rgba": [204, 0, 0, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 50%) blackness(*2))",
+      "rgba": [0, 0, 0, 1]
+    },
+    {
+      "input": "color(red blend(black 50%))",
+      "rgba": [128, 0, 0, 1]
+    },
+    {
+      "input": "color(red tint(50%))",
+      "rgba": [255, 128, 128, 1]
+    },
+    {
+      "input": "color(red a(40%) tint(50%))",
+      "rgba": [255, 128, 128, 0.4]
+    },
+    {
+      "input": "color(red tint(50%) a(20%))",
+      "rgba": [255, 128, 128, 0.2]
+    },
+    {
+      "input": "color(red shade(50%))",
+      "rgba": [128, 0, 0, 1]
+    },
+    {
+      "input": "color(red a(40%) shade(50%))",
+      "rgba": [128, 0, 0, 0.4]
+    },
+    {
+      "input": "color(red shade(50%) a(25%))",
+      "rgba": [128, 0, 0, 0.25]
+    },
+    {
+      "input": "color(hwb(180, 10%, 0%) contrast(0%))",
+      "rgba": [13, 115, 115, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 10%) contrast(0%))",
+      "rgba": [252, 245, 245, 1]
+    },
+    {
+      "input": "color(hwb(180, 10%, 0%) contrast(100%))",
+      "rgba": [0, 0, 0, 1]
+    },
+    {
+      "input": "color(hwb(0, 0%, 10%) contrast(100%))",
+      "rgba": [255, 255, 255, 1]
+    },
+    {
+      "input": "color(black a(40%) contrast(99%))",
+      "rgba": [255, 255, 255, 0.4]
+    },
+    {
+      "input": "color(white a(50%) contrast(99%))",
+      "rgba": [0, 0, 0, 0.5]
+    },
+    {
+      "input": "color(color(rebeccapurple a(-10%)) a(-10%))",
+      "rgba": [102, 51, 153, 0.81]
+    },
+    {
+      "input": "color(color(#4C5859 shade(25%)) blend(color(#4C5859 shade(40%)) 20%))",
+      "rgba": [55, 63, 64, 1]
+    },
+    {
+      "input": "color(red)",
+      "rgba": [255, 0, 0, 1]
+    },
+    {
+      "input": "color(transparent tint(20%))",
+      "rgba": [51, 51, 51, 0]
+    },
+    {
+      "input": "color(rgba(100,40,20,.3) blend(color(rgba(20,80,140,.2)) 33%))",
+      "rgba": [96, 42, 26, 0.3]
+    },
+    {
+      "input": "color(#4c5859 shade(25%) blend(color(#4c5859 shade(40%)) 20%))",
+      "rgba": [55, 63, 64, 1]
+    },
+    {
+      "input": "color(red rgb(10% 20% 30%))",
+      "rgba": [255, 0, 0, 1]
+    },
+    {
+      "input": "color(red hue(25) saturation(50) lightness(50))",
+      "rgba": [191, 117, 64, 1]
+    },
+    {
+      "input": "color(red contrast())",
+      "rgba": [255, 255, 255, 1]
+    },
+    {
+      "input": "color(red red(999) blue(- 999))",
+      "rgba": [255, 0, 0, 1]
+    }
+  ]
+}

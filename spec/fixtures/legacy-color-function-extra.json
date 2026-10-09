@@ -1,0 +1,119 @@
+[
+  {
+    "input": "color(#abc tint(0%))",
+    "rgba": [
+      170,
+      187,
+      204,
+      1
+    ]
+  },
+  {
+    "input": "color(#f00)",
+    "rgba": [
+      255,
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "input": "color(hsl(33,12.5%,47.5%) hue(+3))",
+    "rgba": [
+      138,
+      126,
+      106,
+      1
+    ]
+  },
+  {
+    "input": "color(hwb(25,80%,80%) whiteness(- 5))",
+    "rgba": [
+      123,
+      123,
+      123,
+      1
+    ]
+  },
+  {
+    "input": "color(rgba(120,-40,999,1.5) red(+ 5))",
+    "rgba": [
+      125,
+      0,
+      255,
+      1
+    ]
+  },
+  {
+    "input": "color(rgb(30%,40%,50%) shade(10%))",
+    "rgba": [
+      69,
+      92,
+      114,
+      1
+    ]
+  },
+  {
+    "input": "color(hsl(-20,100%,50%))",
+    "rgba": [
+      255,
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "input": "color(lightgoldenrodyellow)",
+    "rgba": [
+      250,
+      250,
+      210,
+      1
+    ]
+  },
+  {
+    "input": "color(blue blend(color(transparent) 50%))",
+    "rgba": [
+      0,
+      0,
+      255,
+      1
+    ]
+  },
+  {
+    "input": "color(red blend(color(blue a(.5)) 100%))",
+    "rgba": [
+      0,
+      0,
+      255,
+      1
+    ]
+  },
+  {
+    "input": "color(red rgb())",
+    "rgba": [
+      255,
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "input": "color(red contrast(50%))",
+    "rgba": [
+      255,
+      255,
+      255,
+      1
+    ]
+  },
+  {
+    "input": "color(red l(* .5) tint(33%) a(-10%))",
+    "rgba": [
+      170,
+      84,
+      84,
+      0.9
+    ]
+  }
+]
