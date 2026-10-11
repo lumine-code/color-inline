@@ -61,6 +61,13 @@ jobs:
     env:
       LUMINE_JASMINE_REPORTER: list
       LUMINE_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT: "true"
+      LUMINE_HOME: ${{ github.workspace }}/color-inline-home
+      HOME: ${{ github.workspace }}/color-inline-home
+      USERPROFILE: ${{ github.workspace }}/color-inline-home
+      XDG_CONFIG_HOME: ${{ github.workspace }}/color-inline-home
+      TEMP: ${{ github.workspace }}/color-inline-spec-tmp
+      TMP: ${{ github.workspace }}/color-inline-spec-tmp
+      TMPDIR: ${{ github.workspace }}/color-inline-spec-tmp
     steps:
       - uses: actions/checkout@v7
         with:
@@ -74,6 +81,8 @@ jobs:
           node-version-file: lumine/.nvmrc
           cache: npm
           cache-dependency-path: lumine/package-lock.json
+      - name: Create private test directories
+        run: mkdir -p "$LUMINE_HOME" "$TEMP"
       - name: Install Linux build and headless-display dependencies
         if: runner.os == 'Linux'
         run: |
@@ -105,15 +114,11 @@ jobs:
       # LUMINE_HOME, exporting it (and LUMINE_TEST_PACKAGES) for the spec step.
       - name: Install spec dependency packages
         working-directory: lumine
-        run: node script/install-spec-packages.js --package ../color-inline --home "$RUNNER_TEMP/color-inline-home" --github-env "$GITHUB_ENV"
+        run: node script/install-spec-packages.js --package ../color-inline --home "$LUMINE_HOME" --github-env "$GITHUB_ENV"
       - name: Run the Jasmine spec suite
         working-directory: lumine
         timeout-minutes: 20
         run: |
-          export TEMP="$RUNNER_TEMP/color-inline-temp"
-          export TMP="$TEMP"
-          export TMPDIR="$TEMP"
-          mkdir -p "$TEMP"
           if [ "$RUNNER_OS" = Linux ]; then
             xvfb-run --auto-servernum npm start -- --test ../color-inline/spec
           else
