@@ -79,4 +79,18 @@ describe("Color Inline declaration navigation offsets", () => {
   it("preserves an ordinary declaration and excludes its leading indentation and terminator", async () => {
     await navigate("  @brand: red;", "@brand", "@brand: red");
   });
+
+  it("uses the current shared scroll zone for a declaration reveal", async () => {
+    await navigate("@brand: red;", "@brand", "@brand: red");
+    const requests = [];
+    const subscription = editor.onDidRequestAutoscroll((request) => requests.push(request));
+    try {
+      lumine.config.set("editor.scrollZone", [25, 75]);
+      await project.showVariableInFile(api.getVariables().find((entry) => entry.name === "@brand"));
+      expect(editor.getSelectedText()).toBe("@brand: red");
+      expect(requests.at(-1).options.mode).toEqual([25, 75]);
+    } finally {
+      subscription.dispose();
+    }
+  });
 });
