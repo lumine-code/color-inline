@@ -40,6 +40,12 @@ describe("Color Inline pane copies", () => {
     await lumine.workspace.open(source);
     const sourceView = lumine.views.getView(source);
     sourceView.resultsList.querySelector(".list-nested-item").classList.add("collapsed");
+    const style = document.createElement("style");
+    style.textContent =
+      ".search-color-inline-results { height: 100px !important; max-height: 100px; overflow: auto; } .search-color-inline-results > li { min-height: 1200px; }";
+    jasmine.attachToDOM(style);
+    sourceView.resultsList.scrollTop = 75;
+    expect(sourceView.resultsList.scrollTop).toBe(75);
     const { item: first } = await lumine.workspace.copyPaneItem(source, {
       splitDirection: "right",
     });
@@ -53,6 +59,10 @@ describe("Color Inline pane copies", () => {
     expect(first.fileResults[0].matches[0].range[0][0]).toBe(0);
     expect(lumine.views.getView(second)).not.toBe(sourceView);
     expect(lumine.views.getView(second).resultsList.querySelector(".collapsed")).not.toBeNull();
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    expect(lumine.views.getView(first).resultsList.scrollTop).toBe(75);
+    expect(lumine.views.getView(second).resultsList.scrollTop).toBe(75);
     source.destroy();
     expect(first.destroyed).not.toBe(true);
     expect(second.destroyed).not.toBe(true);
