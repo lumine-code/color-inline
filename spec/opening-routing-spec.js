@@ -1,12 +1,16 @@
 const uris = require("../lib/uris");
 
 describe("color-inline workspace views", () => {
-  let main, previousProject;
+  let main, previousProject, results;
 
   beforeEach(async () => {
     main = (await lumine.packages.activatePackage("color-inline")).mainModule;
     previousProject = main.project;
-    main.project = { initialize: jasmine.createSpy("initialize").and.resolveTo() };
+    results = {};
+    main.project = {
+      initialize: jasmine.createSpy("initialize").and.resolveTo(),
+      findAllColors: jasmine.createSpy("new color result set").and.returnValue(results),
+    };
   });
 
   afterEach(async () => {
@@ -22,7 +26,7 @@ describe("color-inline workspace views", () => {
     await main.showSettings();
 
     expect(open.calls.allArgs()).toEqual([
-      [uris.SEARCH, { searchAllPanes: true }],
+      [results],
       [uris.PALETTE, { searchAllPanes: true }],
       [uris.SETTINGS, { searchAllPanes: true }],
     ]);
