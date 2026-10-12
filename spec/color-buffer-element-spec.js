@@ -444,7 +444,7 @@ describe("ColorBufferElement", function () {
       beforeEach(async function () {
         registerViewProvider();
         pane = lumine.workspace.getActivePane();
-        newPane = pane.splitDown({ copyActiveItem: false });
+        newPane = pane.splitDown();
         colorBuffer = project.colorBufferForEditor(editor);
         colorBufferElement = lumine.views.getView(colorBuffer);
 
