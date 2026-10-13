@@ -1,0 +1,16 @@
+{
+  "title": "color-inline",
+  "description": "Browse colors found in the current stylesheet.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "a69b8d95b4724706592978e106e1b6daec041a81",
+  "mode": "normal",
+  "fontSettings": "default",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Browse colors found in the current stylesheet.",
+      "width": 1100,
+      "height": 720
+    }
+  ]
+}

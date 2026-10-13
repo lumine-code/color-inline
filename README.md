@@ -17,6 +17,8 @@ Every colour in an open file is marked where it is written, and the variables a 
 - **Completions**: colour names and colour variables offered while typing.
 - **Extensible**: other packages contribute their own colour and variable expressions through the services.
 
+![Browse colors found in the current stylesheet.](.github/demo.png)
+
 ## Installation
 
 To install `color-inline` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/color-inline`.
