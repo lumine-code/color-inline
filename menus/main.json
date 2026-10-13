@@ -19,7 +19,9 @@
       "submenu": [
         {
           "label": "Find Colors",
-          "command": "color-inline:find-colors"
+          "command": "color-inline:find-colors",
+          "group": "extensions",
+          "order": 10
         }
       ]
     },
