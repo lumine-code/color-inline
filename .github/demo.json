@@ -1,16 +1,61 @@
 {
   "title": "color-inline",
   "description": "Browse colors found in the current stylesheet.",
-  "recordedOn": "2026-10-13",
-  "sourceRevision": "a69b8d95b4724706592978e106e1b6daec041a81",
+  "recordedOn": "2026-10-14",
+  "sourceRevision": "a782db1de946e68ce304b6dc00955a60710445e3",
+  "themeSourceRevision": "14a69683b0e3238e2bc128fbfae3866c1e4ee9c6",
   "mode": "normal",
   "fontSettings": "default",
+  "scenario": "demo.js",
+  "recipeHash": "9640e607cfd1f2d7d10ca765726b2f3291d9c225fb86734dbe224775ccefbaaa",
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "electron": "44.7.0",
+    "chrome": "152.0.7977.130",
+    "devicePixelRatio": 1,
+    "locale": "en-GB",
+    "fontFamily": "Fira Code, Menlo, DejaVu Sans Mono, Consolas, monospace",
+    "fontSize": 14,
+    "themes": ["one-day-syntax", "one-day-ui"]
+  },
+  "viewport": { "width": 1100, "height": 720 },
+  "cornerRadius": 10,
+  "sources": {
+    "editor": {
+      "revision": "385bd1b3ac2db600f1c7e077474d9da4d6deebc4",
+      "dirty": true,
+      "workingTreeHash": "0fa935626a1db13861a0b78ef5c3d890e0a6bff80b25da2fac6e9889910defe0"
+    },
+    "package": {
+      "revision": "a782db1de946e68ce304b6dc00955a60710445e3",
+      "dirty": true,
+      "workingTreeHash": "ce331a52a86ab46a049518bced6bef41d810864026d7a46c1d48a0a7c0f7c23e"
+    },
+    "color-inline": {
+      "revision": "a782db1de946e68ce304b6dc00955a60710445e3",
+      "dirty": true,
+      "workingTreeHash": "ce331a52a86ab46a049518bced6bef41d810864026d7a46c1d48a0a7c0f7c23e"
+    },
+    "one-theme": {
+      "revision": "14a69683b0e3238e2bc128fbfae3866c1e4ee9c6",
+      "dirty": true,
+      "workingTreeHash": "50ec2f83a6347dd8113870992ec4eb2be4014f3d9e12213c2f51b543f1eca793"
+    }
+  },
+  "fixtures": [
+    {
+      "file": "palette.css",
+      "sha256": "50f3ad326f30e10b7d0c83e404a717f1e2a082ce9cd61b3d7ae8ff8bc427e6ec"
+    }
+  ],
   "images": [
     {
       "file": "demo.png",
       "label": "Browse colors found in the current stylesheet.",
       "width": 1100,
-      "height": 720
+      "height": 720,
+      "sha256": "33dcddab6a961ee91d317764af821545122ad9888a983d0842b38710a0167632"
     }
   ]
 }
