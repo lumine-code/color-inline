@@ -5,3 +5,4 @@ package-lock.json
 # Fixtures are test data: their exact bytes, indentation and line endings are
 # what the specs assert against.
 spec/fixtures
+demo/
