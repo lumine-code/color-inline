@@ -74,6 +74,8 @@ lumine-text-editor .color-inline-background {
 
 Extending the colour and variable expressions is described in [docs/4_extending-color-inline.md](docs/4_extending-color-inline.md), and the parsing context in [docs/5_color-context-api.md](docs/5_color-context-api.md).
 
+Color conversion commands require a writable non-mini editor. Copying color values also works in readonly editors.
+
 ## Contributing
 
 Got ideas to make this package better, found a bug, or want to help add new features? Just drop your thoughts on GitHub. Any feedback is welcome!
