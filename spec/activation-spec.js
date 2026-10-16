@@ -30,26 +30,17 @@ describe("color-inline bootstrap", () => {
   });
 
   describe("deferred project restoration", () => {
-    let previousState, projectState, ColorProject;
+    let previousState, projectState, ColorProject, workspaceState;
 
     beforeEach(async () => {
       for (const editor of lumine.workspace.getTextEditors()) editor.destroy();
-      previousState = lumine.packages.getPackageState("color-inline");
+      workspaceState = lumine.packages.storage.forPackage("color-inline").workspaceState;
+      previousState = workspaceState.get("projectSettings", null);
       if (lumine.packages.isPackageLoaded("color-inline")) {
         await lumine.packages.unloadPackage("color-inline", { serialize: false });
       }
-      const { SERIALIZE_VERSION, SERIALIZE_MARKERS_VERSION } = require("../lib/versions");
-      projectState = {
-        version: SERIALIZE_VERSION,
-        markersVersion: SERIALIZE_MARKERS_VERSION,
-        globalSourceNames: lumine.config.get("color-inline.sourceNames"),
-        globalIgnoredNames: lumine.config.get("color-inline.ignoredNames"),
-        ignoredNames: ["temporary/*"],
-        paths: [],
-        variables: { content: [{ name: "saved", value: "1", path: "saved.css" }] },
-        buffers: { unused: { colorMarkers: [] } },
-      };
-      lumine.packages.setPackageState("color-inline", { project: projectState });
+      projectState = { ignoredNames: ["temporary/*"] };
+      await workspaceState.update("projectSettings", projectState);
 
       // Unload discards module identities. Spy on the constructors belonging to
       // the generation that is about to activate.
@@ -64,35 +55,34 @@ describe("color-inline bootstrap", () => {
       if (lumine.packages.isPackageLoaded("color-inline")) {
         await lumine.packages.unloadPackage("color-inline", { serialize: false });
       }
-      lumine.packages.setPackageState("color-inline", previousState);
+      if (previousState == null) await workspaceState.update("projectSettings", undefined);
+      else await workspaceState.update("projectSettings", previousState);
     });
 
-    it("saves only settings from an unopened cached project without restoring or rescanning it", async () => {
+    it("loads project preferences without constructing or scanning an unopened project", async () => {
       const pack = await lumine.packages.startPackage("color-inline");
       await Promise.resolve();
 
-      const serialized = pack.mainModule.serialize().project;
+      const serialized = workspaceState.get("projectSettings");
       expect(serialized.ignoredNames).toEqual(["temporary/*"]);
       expect(serialized.paths).toBeUndefined();
       expect(serialized.variables).toBeUndefined();
       expect(serialized.buffers).toBeUndefined();
-      expect(projectState.variables).toBeDefined();
-      expect(projectState.buffers).toBeDefined();
 
       expect(pack.mainModule.project).toBeNull();
       expect(ColorProject.deserialize).not.toHaveBeenCalled();
       expect(ColorProject.prototype.loadPathsAndVariables).not.toHaveBeenCalled();
     });
 
-    it("starts the project when a document opens and saves settings without its index", async () => {
+    it("starts the project when a document opens and keeps its index out of preferences", async () => {
       const pack = await lumine.packages.startPackage("color-inline");
       const editor = await lumine.workspace.open("color-inline-deferred.css");
       const project = pack.mainModule.project;
       await project.initialize();
 
-      expect(ColorProject.deserialize.calls.count()).toBe(1);
+      expect(ColorProject.deserialize).not.toHaveBeenCalled();
       expect(project.hasColorBufferForEditor(editor)).toBe(true);
-      const serialized = pack.mainModule.serialize().project;
+      const serialized = workspaceState.get("projectSettings");
       expect(serialized.ignoredNames).toEqual(["temporary/*"]);
       expect(serialized.paths).toBeUndefined();
       expect(serialized.variables).toBeUndefined();
@@ -104,7 +94,7 @@ describe("color-inline bootstrap", () => {
       const editor = await lumine.workspace.open();
 
       expect(editor.getPath()).toBeUndefined();
-      expect(ColorProject.deserialize.calls.count()).toBe(1);
+      expect(ColorProject.deserialize).not.toHaveBeenCalled();
       expect(pack.mainModule.project.hasColorBufferForEditor(editor)).toBe(true);
     });
 
@@ -117,7 +107,7 @@ describe("color-inline bootstrap", () => {
       await project.initialize();
 
       expect(project).toBe(pack.mainModule.project);
-      expect(ColorProject.deserialize.calls.count()).toBe(1);
+      expect(ColorProject.deserialize).not.toHaveBeenCalled();
       expect(ColorProject.prototype.loadPathsAndVariables.calls.count()).toBe(1);
     });
   });

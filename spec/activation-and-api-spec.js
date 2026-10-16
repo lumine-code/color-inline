@@ -7,8 +7,6 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  */
 const { Disposable, TextEditor } = require("lumine");
 
-const { SERIALIZE_VERSION, SERIALIZE_MARKERS_VERSION } = require("../lib/versions");
-
 describe("Color Inline", function () {
   let [workspaceElement, colors, project] = Array.from([]);
   let ColorInlineAPI, registry;
@@ -63,19 +61,20 @@ describe("Color Inline", function () {
 
   it("instanciates a ColorProject instance", async () => expect(colors.getProject()).toBeDefined());
 
-  it("serializes the project", async function () {
-    const date = new Date();
-    spyOn(colors.getProject(), "getTimestamp").and.callFake(() => date);
-    return expect(colors.serialize()).toEqual({
-      project: {
-        deserializer: "ColorProject",
-        timestamp: date,
-        version: SERIALIZE_VERSION,
-        markersVersion: SERIALIZE_MARKERS_VERSION,
-        globalSourceNames: ["**/*.sass", "**/*.styl"],
-        globalIgnoredNames: [],
-      },
-    });
+  it("persists project preferences without serializing derived colour state", async function () {
+    project.setSearchNames(["*.custom"]);
+    await conditionPromise(
+      () => colors.workspaceState.get("projectSettings", {}).searchNames?.[0] === "*.custom",
+    );
+    expect(colors.workspaceState.get("projectSettings")).toEqual({ searchNames: ["*.custom"] });
+    expect(colors.serialize).toBeUndefined();
+  });
+
+  it("updates stored project preferences without replacing the live colour project", async function () {
+    const existing = colors.getProject();
+    await colors.workspaceState.update("projectSettings", { searchNames: ["*.custom"] });
+    expect(colors.getProject()).toBe(existing);
+    expect(existing.getSearchNames()).toContain("*.custom");
   });
 
   describe("when deactivated", function () {
