@@ -33,13 +33,16 @@ Commands available in `lumine-workspace`:
 - `color-inline:reload`: rescan the project for variables,
 - `color-inline:project-settings`: open this project's colour settings.
 
-Commands available in `lumine-text-editor`, acting on the colour under the cursor:
+Commands available in `lumine-text-editor:not([mini]):not([readonly])`, acting on the colour under the cursor:
 
 - `color-inline:convert-to-hex`: rewrite it as hexadecimal,
 - `color-inline:convert-to-rgb`: rewrite it as RGB,
 - `color-inline:convert-to-rgba`: rewrite it as RGBA,
 - `color-inline:convert-to-hsl`: rewrite it as HSL,
-- `color-inline:convert-to-hsla`: rewrite it as HSLA,
+- `color-inline:convert-to-hsla`: rewrite it as HSLA.
+
+Commands available in `lumine-text-editor:not([mini])`:
+
 - `color-inline:copy-as-hex`: copy it as hexadecimal,
 - `color-inline:copy-as-rgb`: copy it as RGB,
 - `color-inline:copy-as-rgba`: copy it as RGBA,
