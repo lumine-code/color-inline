@@ -24,15 +24,8 @@ describe("Color Inline durable project preference operations", () => {
         windowStateId: `colour-window-${index}`,
       });
       const workspaceState = manager.forPackage("color-inline").workspaceState;
-      const facade = {
-        workspaceState,
-        project: null,
-        projectState: {},
-        pendingSettingsWrites: 0,
-        subscriptions: new CompositeDisposable(),
-        ensureProject: main.ensureProject,
-        applyProjectSettings: main.applyProjectSettings,
-      };
+      const facade = { ...main };
+      facade.activate({ workspaceState, subscriptions: new CompositeDisposable() });
       facades.push(facade);
       states.push(workspaceState);
       projects.push(facade.ensureProject());
@@ -40,8 +33,7 @@ describe("Color Inline durable project preference operations", () => {
   });
 
   afterEach(async () => {
-    facades.forEach((facade) => facade.subscriptions.dispose());
-    projects.forEach((project) => project.destroy());
+    facades.forEach((facade) => facade.deactivate());
     await Promise.all(managers.map((manager) => manager.close()));
     if (path.dirname(fs.realpathSync.native(directory)) !== base)
       throw new Error("Preference profile escaped its temporary parent");
@@ -74,5 +66,51 @@ describe("Color Inline durable project preference operations", () => {
     projects[0].setSearchNames([]);
     result = await committed();
     expect(result).toEqual({ searchNames: [] });
+  });
+
+  it("applies the new project's settings immediately while an outgoing write is pending", async () => {
+    const manager = managers[0];
+    const project = projects[0];
+    await manager.switchProject(["other-project"]);
+    project.setSearchNames(["*.other"]);
+    await committed();
+    await manager.switchProject(["same-project"]);
+    project.setSearchNames(["*.original"]);
+    await committed();
+
+    const update = manager.stateStore.update.bind(manager.stateStore);
+    let releaseWrite, writeStarted;
+    const heldWrite = new Promise((resolve) => (releaseWrite = resolve));
+    const secondWriteStarted = new Promise((resolve) => (writeStarted = resolve));
+    let writes = 0;
+    spyOn(manager.stateStore, "update").and.callFake(async (...args) => {
+      if (++writes === 2) {
+        writeStarted();
+        await heldWrite;
+      }
+      return update(...args);
+    });
+    project.setIgnoreGlobalSearchNames(true);
+    const switching = manager.switchProject(["other-project"]);
+    expect(project.searchNames).toEqual(["*.other"]);
+    expect(project.ignoreGlobalSearchNames).toBeUndefined();
+    project.setSearchNames(["*.newer"]);
+    try {
+      await switching;
+      await secondWriteStarted;
+      await flushMicrotasks(4);
+      expect(facades[0].pendingSettingsWrites).toBe(1);
+      expect(project.searchNames).toEqual(["*.newer"]);
+      expect(project.ignoreGlobalSearchNames).toBeUndefined();
+    } finally {
+      releaseWrite();
+    }
+    await manager.flush();
+    await conditionPromise(() => facades[0].pendingSettingsWrites === 0);
+    expect(project.searchNames).toEqual(["*.newer"]);
+    expect(project.ignoreGlobalSearchNames).toBeUndefined();
+    await manager.switchProject(["same-project"]);
+    expect(project.searchNames).toEqual(["*.original"]);
+    expect(project.ignoreGlobalSearchNames).toBe(true);
   });
 });
