@@ -391,7 +391,7 @@ color-inline-sources-popup {
 /*    ##        ##     ## ##       ##          ##       ##    ## */
 /*    ##        ##     ## ######## ########    ##       ##    ######## */
 color-inline-palette {
-  background: var(--syntax-background-color);
+  background: var(--base-background-color);
   color: var(--text-color);
   font-size: 1.2em;
 
@@ -456,7 +456,7 @@ color-inline-palette {
   .color-inline-color-group-header-content {
     border-bottom: 1px solid var(--base-border-color);
     display: inline-block;
-    background: var(--syntax-background-color);
+    background: var(--panel-heading-background-color);
     box-sizing: border-box;
     padding: var(--ui-spacing);
     width: 100%;
