@@ -38,6 +38,17 @@ describe("ColorBuffer", function () {
     }
   };
 
+  it("does not cancel document scans when only presentation changes", async () => {
+    colorBuffer = project.colorBufferForEditor(editor);
+    await colorBuffer.initialize();
+    await colorBuffer.variablesAvailable();
+    const version = colorBuffer.scanVersion;
+    editor.setSoftWrapped(!editor.isSoftWrapped());
+    expect(colorBuffer.scanVersion).toBe(version);
+    editor.getBuffer().append("\nchanged");
+    expect(colorBuffer.scanVersion).toBeGreaterThan(version);
+  });
+
   beforeEach(async function () {
     registerViewProvider();
     lumine.config.set("color-inline.delayBeforeScan", 0);
