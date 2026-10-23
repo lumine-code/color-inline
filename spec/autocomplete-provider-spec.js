@@ -8,6 +8,46 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
 const path = require("path");
 const AUTOCOMPLETE_PATH = path.join(__dirname, "..", "..", "autocomplete");
 
+// A request can publish several partial lists before its final list is ready.
+async function waitForCurrentColorRequest(manager, editor, colors) {
+  let request, completion;
+  await waitsFor(() => {
+    const current = manager.getSuggestionsFromProviders.calls.mostRecent();
+    if (
+      current?.args[0]?.editor !== editor ||
+      !current.args[0].bufferPosition.isEqual(editor.getCursorBufferPosition()) ||
+      typeof current.returnValue?.then !== "function"
+    )
+      return false;
+    if (current !== request) {
+      request = current;
+      const observed = (completion = { settled: false });
+      Promise.resolve(request.returnValue).then(
+        () => (observed.settled = true),
+        (error) => {
+          observed.error = error;
+          observed.rejected = true;
+          observed.settled = true;
+        },
+      );
+    }
+    if (completion.rejected) throw completion.error;
+    return completion.settled;
+  });
+  await request.returnValue;
+  expect(manager.getSuggestionsFromProviders.calls.mostRecent()).toBe(request);
+  expect(manager.editor).toBe(editor);
+  expect(manager.suggestionContext.isCurrent()).toBe(true);
+  const colorRequest = colors.autocompleteProviderValue.getSuggestions.calls.mostRecent();
+  expect(colorRequest?.args[0]?.editor).toBe(editor);
+  expect(colorRequest?.args[0]?.bufferPosition).toEqual(editor.getCursorBufferPosition());
+  if (Array.isArray(colorRequest?.returnValue) && colorRequest.returnValue.length) {
+    expect(
+      manager.suggestionList.items.some((item) => item.provider === colors.autocompleteProvider),
+    ).toBe(true);
+  }
+}
+
 describe("autocomplete provider for CSS-like files", function () {
   let [
     completionDelay,
@@ -74,6 +114,8 @@ describe("autocomplete provider for CSS-like files", function () {
     await runs(async function () {
       ({ autocompleteManager } = autocompleteMain);
       spyOn(autocompleteManager, "findSuggestions").and.callThrough();
+      spyOn(autocompleteManager, "getSuggestionsFromProviders").and.callThrough();
+      spyOn(colors.autocompleteProviderValue, "getSuggestions").and.callThrough();
       return spyOn(autocompleteManager, "displaySuggestions").and.callThrough();
     });
   });
@@ -94,7 +136,7 @@ describe("autocomplete provider for CSS-like files", function () {
         return advanceClock(completionDelay);
       });
 
-      await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+      await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
       await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -111,15 +153,12 @@ describe("autocomplete provider for CSS-like files", function () {
 
     it("replaces the prefix even when it contains a @", async function () {
       const provider = colors.autocompleteProviderValue;
-      const providerRequests = provider && spyOn(provider, "getSuggestions").and.callThrough();
-      const requests = spyOn(autocompleteManager, "getSuggestionsFromProviders").and.callThrough();
+      const providerRequests = provider?.getSuggestions;
+      const requests = autocompleteManager.getSuggestionsFromProviders;
       const displayCalls = autocompleteManager.displaySuggestions.calls;
       const findCalls = autocompleteManager.findSuggestions.calls;
       const snapshots = [];
       let stage = "typing";
-      let lastDisplayCount;
-      let lastPoll;
-      let lastLivePoll;
       const snapshot = (label) => {
         const preparation = autocompleteManager.completionPreparation;
         snapshots.push({
@@ -170,33 +209,21 @@ describe("autocomplete provider for CSS-like files", function () {
         });
 
         snapshot("after advanceClock");
-        stage = "displaySuggestions count equals one";
-        await waitsFor(() => {
-          const count = autocompleteManager.displaySuggestions.calls.count();
-          lastPoll = {
-            at: performance.now(),
-            count,
-            findCalls: findCalls.count(),
-            preparationReady: Boolean(autocompleteManager.completionPreparation?.value),
-            delayPending: autocompleteManager.delayTimeout != null,
-            requestPending: autocompleteManager.currentSuggestionsPromise != null,
-            coldInput: Boolean(autocompleteManager.coldBufferInput),
-            managerHasEditor: autocompleteManager.editor === editor,
-          };
-          if (lastPoll.managerHasEditor && editorView.isConnected) lastLivePoll = lastPoll;
-          if (count !== lastDisplayCount) {
-            snapshot("display count changed");
-            lastDisplayCount = count;
-          }
-          return autocompleteManager.displaySuggestions.calls.count() === 1;
-        });
+        stage = "current completion request published";
+        await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
         stage = "popup items";
         await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
         stage = "confirm";
         await runs(async function () {
+          const selected = autocompleteManager.suggestionList.items[0];
+          expect(selected.provider).toBe(colors.autocompleteProvider);
+          const confirmation = spyOn(autocompleteManager, "confirm").and.callThrough();
           lumine.commands.dispatch(editorView, "autocomplete:confirm");
+          expect(confirmation.calls.count()).toBe(1);
+          await confirmation.calls.mostRecent().returnValue;
+          expect(editor.getText()).toBe(selected.text);
           return expect(editor.getText()).not.toContain("@@");
         });
       } catch (error) {
@@ -212,8 +239,6 @@ describe("autocomplete provider for CSS-like files", function () {
               JSON.stringify({
                 stage,
                 snapshots,
-                lastPoll,
-                lastLivePoll,
                 providerObserved: Boolean(providerRequests),
                 providerGenerationUnchanged: colors.autocompleteProviderValue === provider,
                 requests: requests.calls.allArgs().map(([request]) => options(request)),
@@ -250,7 +275,7 @@ describe("autocomplete provider for CSS-like files", function () {
         return advanceClock(completionDelay);
       });
 
-      await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+      await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
       await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -281,7 +306,7 @@ describe("autocomplete provider for CSS-like files", function () {
             return advanceClock(completionDelay);
           });
 
-          await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+          await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
           await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -313,7 +338,7 @@ describe("autocomplete provider for CSS-like files", function () {
             return advanceClock(completionDelay);
           });
 
-          await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+          await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
           await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -342,7 +367,7 @@ describe("autocomplete provider for CSS-like files", function () {
             return advanceClock(completionDelay);
           });
 
-          await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+          await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
           await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -377,7 +402,7 @@ describe("autocomplete provider for CSS-like files", function () {
             return advanceClock(completionDelay);
           });
 
-          await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+          await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
           await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -412,7 +437,7 @@ describe("autocomplete provider for CSS-like files", function () {
               return advanceClock(completionDelay);
             });
 
-            await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+            await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
             await waitsFor(
               () => editorView.querySelector("autocomplete-suggestion-list li") != null,
@@ -444,7 +469,7 @@ describe("autocomplete provider for CSS-like files", function () {
             return advanceClock(completionDelay);
           });
 
-          await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+          await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
           await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -477,7 +502,7 @@ describe("autocomplete provider for CSS-like files", function () {
         return advanceClock(completionDelay);
       });
 
-      await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+      await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
       await runs(() =>
         expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist(),
@@ -507,7 +532,7 @@ describe("autocomplete provider for CSS-like files", function () {
           return advanceClock(completionDelay);
         });
 
-        await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+        await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
         await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
@@ -583,6 +608,8 @@ describe("autocomplete provider for Sass files", function () {
       await runs(async function () {
         ({ autocompleteManager } = autocompleteMain);
         spyOn(autocompleteManager, "findSuggestions").and.callThrough();
+        spyOn(autocompleteManager, "getSuggestionsFromProviders").and.callThrough();
+        spyOn(colors.autocompleteProviderValue, "getSuggestions").and.callThrough();
         return spyOn(autocompleteManager, "displaySuggestions").and.callThrough();
       });
     });
@@ -601,10 +628,7 @@ describe("autocomplete provider for Sass files", function () {
         return advanceClock(completionDelay);
       });
 
-      await waitsFor(
-        "suggestions displayed callback",
-        () => autocompleteManager.displaySuggestions.calls.count() === 1,
-      );
+      await waitForCurrentColorRequest(autocompleteManager, editor, colors);
 
       await waitsFor(
         "autocomplete lis",
