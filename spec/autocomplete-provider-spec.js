@@ -89,6 +89,8 @@ describe("autocomplete provider for CSS-like files", function () {
         editor.insertText("b");
         editor.insertText("a");
 
+        await waitsFor(() => autocompleteManager.delayTimeout != null);
+
         return advanceClock(completionDelay);
       });
 
@@ -161,6 +163,8 @@ describe("autocomplete provider for CSS-like files", function () {
           editor.insertText("@");
           editor.insertText("b");
           editor.insertText("a");
+
+          await waitsFor(() => autocompleteManager.delayTimeout != null);
 
           return advanceClock(completionDelay);
         });
@@ -241,6 +245,8 @@ describe("autocomplete provider for CSS-like files", function () {
         editor.insertText("o");
         editor.insertText("t");
 
+        await waitsFor(() => autocompleteManager.delayTimeout != null);
+
         return advanceClock(completionDelay);
       });
 
@@ -269,6 +275,8 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.insertText("b");
             editor.insertText("a");
             editor.insertText("s");
+
+            await waitsFor(() => autocompleteManager.delayTimeout != null);
 
             return advanceClock(completionDelay);
           });
@@ -300,6 +308,8 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.insertText("f");
             editor.insertText("f");
 
+            await waitsFor(() => autocompleteManager.delayTimeout != null);
+
             return advanceClock(completionDelay);
           });
 
@@ -326,6 +336,8 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.insertText("#");
             editor.insertText("f");
             editor.insertText("f");
+
+            await waitsFor(() => autocompleteManager.delayTimeout != null);
 
             return advanceClock(completionDelay);
           });
@@ -360,6 +372,8 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.insertText(",");
             editor.insertText(" ");
 
+            await waitsFor(() => autocompleteManager.delayTimeout != null);
+
             return advanceClock(completionDelay);
           });
 
@@ -393,6 +407,8 @@ describe("autocomplete provider for CSS-like files", function () {
               editor.insertText("x");
               editor.insertText(" ");
 
+              await waitsFor(() => autocompleteManager.delayTimeout != null);
+
               return advanceClock(completionDelay);
             });
 
@@ -422,6 +438,8 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.insertText("$");
             editor.insertText("o");
             editor.insertText("t");
+
+            await waitsFor(() => autocompleteManager.delayTimeout != null);
 
             return advanceClock(completionDelay);
           });
@@ -454,6 +472,8 @@ describe("autocomplete provider for CSS-like files", function () {
         editor.insertText("o");
         editor.insertText("o");
 
+        await waitsFor(() => autocompleteManager.delayTimeout != null);
+
         return advanceClock(completionDelay);
       });
 
@@ -481,6 +501,8 @@ describe("autocomplete provider for CSS-like files", function () {
           editor.insertText("n");
           editor.insertText("-");
           editor.insertText("p");
+
+          await waitsFor(() => autocompleteManager.delayTimeout != null);
 
           return advanceClock(completionDelay);
         });
@@ -573,6 +595,8 @@ describe("autocomplete provider for Sass files", function () {
         editor.insertText("$");
         editor.insertText("b");
         editor.insertText("a");
+
+        await waitsFor(() => autocompleteManager.delayTimeout != null);
 
         return advanceClock(completionDelay);
       });
