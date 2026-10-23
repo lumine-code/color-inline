@@ -108,25 +108,128 @@ describe("autocomplete provider for CSS-like files", function () {
     });
 
     it("replaces the prefix even when it contains a @", async function () {
-      await runs(async function () {
-        expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
+      const provider = colors.autocompleteProviderValue;
+      const providerRequests = provider && spyOn(provider, "getSuggestions").and.callThrough();
+      const requests = spyOn(autocompleteManager, "getSuggestionsFromProviders").and.callThrough();
+      const displayCalls = autocompleteManager.displaySuggestions.calls;
+      const findCalls = autocompleteManager.findSuggestions.calls;
+      const snapshots = [];
+      let stage = "typing";
+      let lastDisplayCount;
+      let lastPoll;
+      let lastLivePoll;
+      const snapshot = (label) => {
+        const preparation = autocompleteManager.completionPreparation;
+        snapshots.push({
+          label,
+          at: performance.now(),
+          text: editor.getText(),
+          cursor: editor.getCursorBufferPosition().toArray(),
+          managerHasEditor: autocompleteManager.editor === editor,
+          workspaceHasEditor: lumine.workspace.getActiveTextEditor() === editor,
+          focusedEditor: document.activeElement?.closest("lumine-text-editor") === editorView,
+          focusedTag: document.activeElement?.tagName,
+          connected: editorView.isConnected,
+          documentFocused: document.hasFocus(),
+          mode: editor.getBuffer().getLanguageMode().constructor.name,
+          grammar: editor.getGrammar().scopeName,
+          displayCalls: displayCalls.count(),
+          findCalls: findCalls.count(),
+          generation: autocompleteManager.suggestionGeneration,
+          bufferGeneration: autocompleteManager.bufferChangeGeneration,
+          shouldDisplay: autocompleteManager.shouldDisplaySuggestions,
+          delayPending: autocompleteManager.delayTimeout != null,
+          hidePending: autocompleteManager.hideTimeout != null,
+          requestPending: autocompleteManager.currentSuggestionsPromise != null,
+          contextCurrent: autocompleteManager.suggestionContext?.isCurrent?.(),
+          coldInput: Boolean(autocompleteManager.coldBufferInput),
+          preparation: preparation && {
+            index: preparation.index,
+            ready: Boolean(preparation.value),
+            pending: Boolean(preparation.promise),
+            urgent: preparation.urgent,
+          },
+          popupItems: editorView.querySelectorAll("autocomplete-suggestion-list li").length,
+        });
+      };
+      try {
+        snapshot("before typing");
+        await runs(async function () {
+          expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
-        editor.moveToBottom();
-        editor.insertText("@");
-        editor.insertText("b");
-        editor.insertText("a");
+          editor.moveToBottom();
+          editor.insertText("@");
+          editor.insertText("b");
+          editor.insertText("a");
 
-        return advanceClock(completionDelay);
-      });
+          return advanceClock(completionDelay);
+        });
 
-      await waitsFor(() => autocompleteManager.displaySuggestions.calls.count() === 1);
+        snapshot("after advanceClock");
+        stage = "displaySuggestions count equals one";
+        await waitsFor(() => {
+          const count = autocompleteManager.displaySuggestions.calls.count();
+          lastPoll = {
+            at: performance.now(),
+            count,
+            findCalls: findCalls.count(),
+            preparationReady: Boolean(autocompleteManager.completionPreparation?.value),
+            delayPending: autocompleteManager.delayTimeout != null,
+            requestPending: autocompleteManager.currentSuggestionsPromise != null,
+            coldInput: Boolean(autocompleteManager.coldBufferInput),
+            managerHasEditor: autocompleteManager.editor === editor,
+          };
+          if (lastPoll.managerHasEditor && editorView.isConnected) lastLivePoll = lastPoll;
+          if (count !== lastDisplayCount) {
+            snapshot("display count changed");
+            lastDisplayCount = count;
+          }
+          return autocompleteManager.displaySuggestions.calls.count() === 1;
+        });
 
-      await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
+        stage = "popup items";
+        await waitsFor(() => editorView.querySelector("autocomplete-suggestion-list li") != null);
 
-      await runs(async function () {
-        lumine.commands.dispatch(editorView, "autocomplete:confirm");
-        return expect(editor.getText()).not.toContain("@@");
-      });
+        stage = "confirm";
+        await runs(async function () {
+          lumine.commands.dispatch(editorView, "autocomplete:confirm");
+          return expect(editor.getText()).not.toContain("@@");
+        });
+      } catch (error) {
+        try {
+          snapshot("failure");
+          const options = (request) => ({
+            prefix: request?.prefix,
+            position: request?.bufferPosition?.toArray(),
+            scopes: request?.scopeDescriptor?.scopes,
+          });
+          console.error(
+            "COLOR_INLINE_AT_PREFIX_DIAGNOSTIC " +
+              JSON.stringify({
+                stage,
+                snapshots,
+                lastPoll,
+                lastLivePoll,
+                providerObserved: Boolean(providerRequests),
+                providerGenerationUnchanged: colors.autocompleteProviderValue === provider,
+                requests: requests.calls.allArgs().map(([request]) => options(request)),
+                providerRequests: providerRequests?.calls.all().map((call) => ({
+                  ...options(call.args[0]),
+                  returned: Array.isArray(call.returnValue)
+                    ? call.returnValue.map((suggestion) => suggestion.text)
+                    : typeof call.returnValue,
+                })),
+                displays: displayCalls.allArgs().map(([suggestions, request]) => ({
+                  ...options(request),
+                  suggestions: suggestions.map((suggestion) => suggestion.text),
+                })),
+              }),
+          );
+        } catch (diagnosticError) {
+          console.error("COLOR_INLINE_AT_PREFIX_DIAGNOSTIC_ERROR " + String(diagnosticError));
+        }
+        throw error;
+      }
     });
 
     it("replaces the prefix even when it contains a $", async function () {
