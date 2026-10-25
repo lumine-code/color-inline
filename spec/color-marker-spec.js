@@ -8,6 +8,11 @@ const Color = require("../lib/color");
 const ColorMarker = require("../lib/color-marker");
 
 describe("ColorMarker", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [editor, marker, colorMarker, _jasmineContent] = Array.from([]);
 
   beforeEach(function () {

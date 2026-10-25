@@ -1,4 +1,9 @@
 describe("Color Inline retained services and expression ownership", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, cleanups;
   beforeEach(async () => {
     main = (await lumine.packages.activatePackage("color-inline")).mainModule;

@@ -21,6 +21,11 @@ const TOTAL_VARIABLES_IN_PROJECT = 12;
 const TOTAL_COLORS_VARIABLES_IN_PROJECT = 10;
 
 describe("ColorProject", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [project, baseProject, _promise, rootPath, paths, eventSpy] = Array.from([]);
 
   // The project stores native paths, because they have to compare equal to

@@ -3,6 +3,11 @@ const path = require("node:path");
 const timers = require("node:timers/promises");
 
 describe("Color Inline numeric aliases in contributed color handlers", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, project, root, previousPaths, leases, editors, buffers;
   beforeEach(async () => {
     previousPaths = lumine.project.getPaths();

@@ -9,6 +9,11 @@ const ColorContext = require("../lib/color-context");
 const registry = require("../lib/color-expressions");
 
 describe("ColorScanner line tracking", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let scanner;
 
   beforeEach(function () {
@@ -80,6 +85,11 @@ describe("ColorScanner line tracking", function () {
 });
 
 describe("ColorScanner", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [scanner, editor, text, result, _lastIndex] = Array.from([]);
 
   const withScannerForString = (string, block) =>

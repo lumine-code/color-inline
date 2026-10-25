@@ -10,6 +10,11 @@ const registry = require("../lib/variable-expressions");
 const scopeFromFileName = require("../lib/scope-from-file-name");
 
 describe("VariableScanner line tracking", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let scanner;
 
   beforeEach(function () {
@@ -79,6 +84,11 @@ describe("VariableScanner line tracking", function () {
 });
 
 describe("VariableScanner", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [scanner, editor, text, scope] = Array.from([]);
 
   const withTextEditor = (fixture, block) =>

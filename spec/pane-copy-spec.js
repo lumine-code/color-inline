@@ -1,4 +1,9 @@
 describe("Color Inline singleton pane items", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let project, models;
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.workspace.getElement());

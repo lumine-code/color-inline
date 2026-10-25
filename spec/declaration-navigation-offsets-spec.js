@@ -7,6 +7,7 @@ describe("Color Inline declaration navigation offsets", () => {
 
   beforeEach(async () => {
     jasmine.useRealClock();
+    await lumine.packages.activatePackage("language-less");
     for (const method of ["openExternal", "openPath", "showItemInFolder", "openApplication"])
       spyOn(lumine.shell, method).and.resolveTo();
     spyOn(lumine.application, "openWindow").and.resolveTo();

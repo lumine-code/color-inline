@@ -8,6 +8,11 @@ const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
 const { Disposable, TextEditor } = require("lumine");
 
 describe("Color Inline", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [workspaceElement, colors, project] = Array.from([]);
   let ColorInlineAPI, registry;
 

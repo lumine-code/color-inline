@@ -2,6 +2,11 @@ const path = require("node:path");
 const timers = require("node:timers");
 
 describe("Color Inline syntax scan ownership", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let execution;
   beforeEach(() => {
     execution = lumine.grammars.syntaxExecution;

@@ -3,6 +3,11 @@ const os = require("node:os");
 const path = require("node:path");
 
 describe("extension-derived color scopes in real project editors", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let root, previousPaths, main, project, paths;
   const content = "body { color: #11223344; background: rgb(1, 2, 3); }\n";
   beforeEach(async () => {

@@ -2,6 +2,11 @@ const ColorContext = require("../lib/color-context");
 const registry = require("../lib/color-expressions");
 
 describe("Audit of existing color expression output", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   const read = (expression, scope = "css") =>
     new ColorContext({ registry, scope }).readColor(expression);
 
@@ -34,6 +39,11 @@ describe("Audit of existing color expression output", () => {
 });
 
 describe("Audit of native color search results", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let view;
   afterEach(() => {
     view?.subscriptions.dispose();

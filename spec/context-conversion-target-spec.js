@@ -3,6 +3,11 @@ const os = require("node:os");
 const path = require("node:path");
 
 describe("Color Inline native conversion targets", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, editor, element, project, root, previousPaths;
 
   beforeEach(async () => {

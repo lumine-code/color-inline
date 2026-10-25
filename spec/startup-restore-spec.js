@@ -1,4 +1,9 @@
 describe("Color Inline settings startup restoration", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let pack, view;
 
   beforeEach(async () => {

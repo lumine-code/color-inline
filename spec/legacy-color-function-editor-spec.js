@@ -2,6 +2,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 describe("legacy color() in real project editor decorations", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let folder, file, previousPaths, main, editor;
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.workspace.getElement());

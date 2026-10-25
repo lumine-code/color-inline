@@ -51,6 +51,8 @@ Commands available in `lumine-text-editor:not([mini])`:
 
 ## Usage
 
+Selecting **None** as a file's grammar stops its colour scanning and removes its marks and indexed variables. That open file is also excluded from project colour searches and variable scans until a grammar is selected again.
+
 Variables are scanned from the files matching the `sourceNames` setting, which covers CSS, Less, Sass, SCSS and Stylus by default. Which files get colour marks is a separate question, answered by `supportedFiletypes` — every file by default. Colour _words_ such as `red` or `whitesmoke` are only marked in the file types listed in `filetypesForColorWords`, so prose is not littered with them.
 
 The scan uses the editor's bundled ripgrep to find candidate files and honours the repository's ignore rules; `ignoredNames` excludes further paths, and a pattern naming a directory excludes everything beneath it.

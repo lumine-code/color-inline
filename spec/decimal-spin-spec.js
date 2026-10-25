@@ -3,6 +3,11 @@ const os = require("node:os");
 const path = require("node:path");
 
 describe("Color Inline decimal spin values in native buffers", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let root, previousPaths, file, editor, project;
 
   beforeEach(() => {

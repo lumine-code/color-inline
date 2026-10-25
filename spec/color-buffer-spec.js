@@ -13,6 +13,11 @@ require("./helpers/matchers");
 const jsonFixture = require("./helpers/fixtures").jsonFixture(__dirname, "fixtures");
 
 describe("ColorBuffer", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [editor, colorBuffer, colors, project] = Array.from([]);
 
   const _sleep = async function (ms) {

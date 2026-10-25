@@ -2,6 +2,11 @@ const path = require("node:path");
 const timers = require("node:timers/promises");
 
 describe("Color Inline unavailable syntax", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let execution, editor, mode, project, colorBuffer, ColorBuffer;
   beforeEach(async () => {
     jasmine.useRealClock();

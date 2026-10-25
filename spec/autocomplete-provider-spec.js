@@ -49,6 +49,11 @@ async function waitForCurrentColorRequest(manager, editor, colors) {
 }
 
 describe("autocomplete provider for CSS-like files", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [
     completionDelay,
     editor,
@@ -548,6 +553,11 @@ describe("autocomplete provider for CSS-like files", function () {
 });
 
 describe("autocomplete provider for Sass files", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [
     completionDelay,
     editor,

@@ -3,6 +3,11 @@ const os = require("node:os");
 const path = require("node:path");
 
 describe("Color Inline HSV hue circle endpoint", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let directory, previousPaths, editor, main;
   beforeEach(async () => {
     jasmine.useRealClock();

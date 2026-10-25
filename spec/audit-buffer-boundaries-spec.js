@@ -3,6 +3,11 @@ const path = require("node:path");
 const timers = require("node:timers/promises");
 
 describe("Color Inline actual buffer input boundaries", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, project, root, editors, buffers, previousPaths;
   beforeEach(async () => {
     previousPaths = lumine.project.getPaths();

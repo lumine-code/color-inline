@@ -1,6 +1,11 @@
 const manifest = require("../package.json");
 
 describe("color-inline bootstrap", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   it("keeps lifecycle registrations in JavaScript", () => {
     expect(manifest.requiresRestartOnUpdate).toBe(true);
     for (const descriptor of Object.values(manifest.providedServices || {})) {

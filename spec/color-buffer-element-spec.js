@@ -22,6 +22,11 @@ const _sleep = async function (duration) {
 };
 
 describe("ColorBufferElement", function () {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let [editor, editorElement, colorBuffer, colors, project, colorBufferElement, jasmineContent] =
     Array.from([]);
 

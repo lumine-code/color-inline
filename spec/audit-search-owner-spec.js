@@ -3,6 +3,11 @@ const fs = require("node:fs/promises");
 const { setImmediate } = require("node:timers/promises");
 
 describe("Color Inline search result publication ownership", () => {
+  // Processing fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, Results, ColorSearch, project, file, views, models, reads;
   const deferred = () => {
     let resolve;
