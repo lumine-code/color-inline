@@ -1,4 +1,7 @@
-* text=auto
+# Text uses LF on every platform; Windows command scripts require CRLF.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
 
 # Spec fixtures are matched by character offset, so their line endings are part
 # of the expected values. Checked out with CRLF on Windows, every offset past
