@@ -171,4 +171,28 @@ describe("color analysis budget lifecycle", () => {
     expect(resumed.getColorMarkers().length).toBe(1);
     expect(project.isPathAnalysisDisabled(editor.getPath())).toBeFalse();
   });
+
+  it("retires in-flight project/search state when the configured budget changes", async () => {
+    const file = editor.getPath();
+    project.paths = [file];
+    const terminate = jasmine.createSpy("terminate worker");
+    project.pathsScanner = { terminateRunningTask: terminate };
+    const remove = spyOn(project, "deleteVariablesForPaths").and.callThrough();
+    const rescan = spyOn(project, "scanAndUpdateVariables").and.resolveTo([]);
+    const Search = require("../lib/color-search");
+    const search = new Search({ project, sourceNames: ["*.css"] });
+    search.request = { controller: new AbortController() };
+    search.fileResults = [{ filePath: file, matches: [{ matchText: "red" }] }];
+    try {
+      lumine.config.set("color-inline.maximumAnalysisLength", 2048);
+      expect(terminate).toHaveBeenCalled();
+      expect(remove).toHaveBeenCalledWith([file]);
+      expect(rescan).toHaveBeenCalledWith([file]);
+      expect(search.request.controller.signal.aborted).toBeTrue();
+      expect(search.fileResults).toEqual([]);
+      expect(search.results).toEqual([]);
+    } finally {
+      search.destroy();
+    }
+  });
 });
