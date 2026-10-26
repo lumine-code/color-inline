@@ -131,4 +131,96 @@ describe("Color Inline rejected syntax ownership", () => {
     );
     expect(report).toHaveBeenCalledTimes(2);
   });
+
+  for (const phase of ["initial", "variables"])
+    it(`starts fresh ${phase} readiness before the unavailable lifetime settles`, async () => {
+      const events = new (require("lumine").Emitter)();
+      let available = true,
+        release,
+        calls = 0;
+      const old = new Promise((resolve) => {
+        release = resolve;
+      });
+      editor.getSyntaxAvailability = () => ({
+        available,
+        reason: available ? undefined : "failure",
+      });
+      editor.onDidChangeSyntaxAvailability = (callback) => events.on("availability", callback);
+      spyOn(ColorBuffer.prototype, "scanBufferForVariables").and.resolveTo([]);
+      const scan = spyOn(ColorBuffer.prototype, "scanBufferForColors").and.callFake(() => {
+        calls++;
+        return calls === (phase === "initial" ? 1 : 2) ? old : Promise.resolve([]);
+      });
+      colorBuffer = new ColorBuffer({ editor, project });
+      if (phase === "variables") await colorBuffer.initialize();
+      const obsolete =
+        phase === "initial" ? colorBuffer.initialize() : colorBuffer.variablesAvailable();
+      await flushMicrotasks();
+      expect(calls).toBe(phase === "initial" ? 1 : 2);
+      available = false;
+      events.emit("availability", { available, reason: "failure" });
+      expect(colorBuffer.getColorMarkers()).toBeNull();
+      expect(await colorBuffer.update()).toBeNull();
+      available = true;
+      events.emit("availability", { available });
+      await colorBuffer.initialize();
+      await colorBuffer.variablesAvailable();
+      expect(colorBuffer.initialized).toBeTrue();
+      expect(colorBuffer.variableInitialized).toBeTrue();
+      const before = scan.calls.count();
+      release([]);
+      expect(await obsolete).toBeNull();
+      await flushMicrotasks();
+      expect(scan.calls.count()).toBe(before);
+      expect(colorBuffer.variableInitialized).toBeTrue();
+      events.dispose();
+    });
+
+  for (const settlement of ["resolve", "reject"])
+    it(`retires unavailable scope batches without blocking resumed work on late ${settlement}`, async () => {
+      const events = new (require("lumine").Emitter)();
+      let available = true,
+        release,
+        reject;
+      editor.getSyntaxAvailability = () => ({ available });
+      editor.onDidChangeSyntaxAvailability = (callback) => events.on("availability", callback);
+      spyOn(ColorBuffer.prototype, "scanBufferForColors").and.resolveTo([]);
+      colorBuffer = new ColorBuffer({ editor, project });
+      await colorBuffer.variablesAvailable();
+      const old = new Promise((resolve, fail) => {
+        release = resolve;
+        reject = fail;
+      });
+      const report = spyOn(console, "error");
+      spyOn(editor, "getScopeDescriptorsForBufferPositions").and.returnValues(
+        old,
+        Promise.resolve([{}]),
+      );
+      const marker = () => ({
+        getBufferRange: () => ({ start: [0, 0] }),
+        isIgnored: () => false,
+        applyScopeDescriptor: jasmine.createSpy("apply current scope"),
+      });
+      const obsoleteMarker = marker(),
+        currentMarker = marker();
+      const obsolete = colorBuffer.queueScopeCheck(obsoleteMarker);
+      await flushMicrotasks();
+      available = false;
+      events.emit("availability", { available, reason: "failure" });
+      available = true;
+      events.emit("availability", { available });
+      await colorBuffer.queueScopeCheck(currentMarker);
+      expect(currentMarker.applyScopeDescriptor).toHaveBeenCalledTimes(1);
+      if (settlement === "resolve") {
+        release([{}]);
+        await obsolete;
+      } else {
+        reject(new Error("Retired scope request failed"));
+        await expectAsync(obsolete).toBeRejected();
+      }
+      expect(obsoleteMarker.applyScopeDescriptor).not.toHaveBeenCalled();
+      expect(currentMarker.applyScopeDescriptor).toHaveBeenCalledTimes(1);
+      expect(report).not.toHaveBeenCalled();
+      events.dispose();
+    });
 });
