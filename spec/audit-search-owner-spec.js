@@ -28,11 +28,21 @@ describe("Color Inline search result publication ownership", () => {
     views = [];
     models = [];
     reads = [];
-    spyOn(fs, "readFile").and.callFake((target) => {
+    spyOn(fs, "open").and.callFake(async (target) => {
       if (target !== file) throw Error("Unexpected read outside the owned boundary");
       const read = deferred();
       reads.push(read);
-      return read.promise;
+      let consumed = false;
+      return {
+        stat: async () => ({ size: 0 }),
+        read: async (buffer) => {
+          if (consumed) return { bytesRead: 0 };
+          consumed = true;
+          const text = await read.promise;
+          return { bytesRead: buffer.write(text) };
+        },
+        close: async () => {},
+      };
     });
   });
   afterEach(async () => {
@@ -65,7 +75,8 @@ describe("Color Inline search result publication ownership", () => {
   }
   async function started(count) {
     for (let attempt = 0; reads.length < count && attempt < 30; attempt++) await setImmediate();
-    if (reads.length !== count) throw Error("Controlled search did not reach readFile");
+    if (reads.length !== count)
+      throw Error("Controlled search did not reach the bounded file reader");
   }
 
   it("discards an older completion when the same model starts a newer search", async () => {

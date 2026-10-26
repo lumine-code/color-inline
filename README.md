@@ -53,6 +53,10 @@ Commands available in `lumine-text-editor:not([mini])`:
 
 Selecting **None** as a file's grammar stops its colour scanning and removes its marks and indexed variables. That open file is also excluded from project colour searches and variable scans until a grammar is selected again.
 
+Colour analysis passes complete inputs to extensible native regular expressions and provider callbacks. `maximumAnalysisLength` therefore limits each document or disk source to 8 Mi UTF-16 code units by default (configurable up to 32 Mi). The editor checks metadata before reading; disk readers also enforce the limit during decoding if the file grows. Exceeding this feature budget retires pending work and removes prior marks and variables; shrinking the document or increasing the setting restores analysis. Oversized project sources are reported and excluded without truncating their text. Completion context is limited to 4096 code units of the complete line prefix.
+
+Collected results are bounded to 100,000 entries per scan and 8 Mi code units of transferred or retained result strings, with a bounded object structure. A budget failure rejects the scan instead of publishing a partial collection. These limits apply to colour analysis, not to opening or editing the document.
+
 Variables are scanned from the files matching the `sourceNames` setting, which covers CSS, Less, Sass, SCSS and Stylus by default. Which files get colour marks is a separate question, answered by `supportedFiletypes` — every file by default. Colour _words_ such as `red` or `whitesmoke` are only marked in the file types listed in `filetypesForColorWords`, so prose is not littered with them.
 
 The scan uses the editor's bundled ripgrep to find candidate files and honours the repository's ignore rules; `ignoredNames` excludes further paths, and a pattern naming a directory excludes everything beneath it.

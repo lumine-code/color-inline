@@ -96,6 +96,14 @@
     "VariablesCollection": "deserializeVariablesCollection"
   },
   "configSchema": {
+    "maximumAnalysisLength": {
+      "title": "Maximum Analysis Input Length",
+      "description": "Maximum UTF-16 code units passed to native color/variable regular expressions per document or project source. Oversized sources are not read; their derived marks and variables are removed until eligible again.",
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 33554432,
+      "default": 8388608
+    },
     "markerType": {
       "title": "Marker Type",
       "description": "How a colour is drawn in the editor.",
