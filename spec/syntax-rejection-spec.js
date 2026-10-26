@@ -88,4 +88,47 @@ describe("Color Inline rejected syntax ownership", () => {
         expect(errors).not.toHaveBeenCalled();
       });
     });
+
+  it("does not start document scans or scope reads for a known failed mode and resumes after recovery", async () => {
+    mode.error = new Error("Permanent WASM parse failure");
+    const analyze = spyOn(editor, "analyzeSyntax").and.callThrough();
+    const scopes = spyOn(editor, "getScopeDescriptorsForBufferPositions").and.callThrough();
+    const read = spyOn(editor, "getText").and.callThrough();
+    const report = spyOn(console, "error");
+    colorBuffer = new ColorBuffer({ editor, project });
+    for (let index = 0; index < 5; index++) {
+      expect(await colorBuffer.initialize()).toBeNull();
+      expect(await colorBuffer.variablesAvailable()).toBeNull();
+      expect(await colorBuffer.update()).toBeNull();
+      expect(await colorBuffer.queueScopeCheck()).toBeNull();
+      expect(await colorBuffer.scanBufferForVariables()).toBeNull();
+      expect(await colorBuffer.scanBufferForColors()).toBeNull();
+    }
+    expect(analyze).not.toHaveBeenCalled();
+    expect(scopes).not.toHaveBeenCalled();
+    expect(read).not.toHaveBeenCalled();
+    // The mode owns the original parser error. Dependent features do not repeat it.
+    expect(report).not.toHaveBeenCalled();
+    mode.error = null;
+    await colorBuffer.update();
+    await colorBuffer.variablesAvailable();
+    expect(analyze).toHaveBeenCalled();
+    expect(colorBuffer.getColorMarkers().length).toBe(1);
+    expect(colorBuffer.variableInitialized).toBeTrue();
+  });
+
+  it("deduplicates one readiness error across cancellation generations of the same source", () => {
+    colorBuffer = new ColorBuffer({ editor, project });
+    const report = spyOn(console, "error");
+    colorBuffer.reportReadinessFailure(new Error("Same failure"), colorBuffer.captureScanInput());
+    colorBuffer.terminateRunningTask();
+    colorBuffer.reportReadinessFailure(new Error("Same failure"), colorBuffer.captureScanInput());
+    expect(report).toHaveBeenCalledTimes(1);
+    editor.getBuffer().append(" ");
+    colorBuffer.reportReadinessFailure(
+      new Error("New input failure"),
+      colorBuffer.captureScanInput(),
+    );
+    expect(report).toHaveBeenCalledTimes(2);
+  });
 });
