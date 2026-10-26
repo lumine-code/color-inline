@@ -7,9 +7,10 @@ describe("Color Inline unavailable syntax", () => {
     await lumine.packages.activatePackage("language-text");
   });
 
-  let execution, editor, mode, project, colorBuffer, ColorBuffer;
+  let execution, editor, mode, project, colorBuffer, ColorBuffer, quarantined;
   beforeEach(async () => {
     jasmine.useRealClock();
+    quarantined = false;
     execution = lumine.grammars.syntaxExecution;
     lumine.grammars.syntaxExecution = "worker";
     lumine.project.setPaths([]);
@@ -43,9 +44,22 @@ describe("Color Inline unavailable syntax", () => {
     spyOn(mode, "schedule");
     await editor.analyzeSyntax(require.resolve("./fixtures/failing-syntax"), "failMarkedText");
     editor.getBuffer().insert([0, 0], "/*__color_fail__*/");
-    const settled = await mode.settle();
-    expect(settled.parseError).toBeTruthy();
-    expect(mode.error).toBeFalsy();
+    let settled;
+    try {
+      settled = await mode.settle();
+    } catch (error) {
+      // Published cores retire the failed owner before its settlement replies.
+      if (error.name !== "AbortError" || editor.getSyntaxAvailability?.()?.reason !== "failure")
+        throw error;
+    }
+    quarantined = editor.getSyntaxAvailability?.()?.reason === "failure";
+    if (quarantined) {
+      expect(editor.getBuffer().getLanguageMode()).not.toBe(mode);
+      expect(await editor.whenGrammarSettled()).toBeFalse();
+    } else {
+      expect(settled.parseError).toBeTruthy();
+      expect(mode.error).toBeFalsy();
+    }
     expect(await editor.getScopeDescriptorsForBufferPositions([[0, 12]])).toBeNull();
   }
 
@@ -54,7 +68,13 @@ describe("Color Inline unavailable syntax", () => {
       [0, 0],
       [0, "/*__color_fail__*/".length],
     ]);
+    if (quarantined) {
+      expect(editor.retrySyntaxAnalysis()).toBeTrue();
+      mode = editor.getBuffer().getLanguageMode();
+      await mode.ready;
+    }
     expect((await mode.settle()).parseError).toBeFalsy();
+    if (quarantined) expect(editor.getSyntaxAvailability().available).toBeTrue();
   }
 
   it("does not resubmit initialization indefinitely for one failed syntax snapshot", async () => {
@@ -71,7 +91,7 @@ describe("Color Inline unavailable syntax", () => {
     colorBuffer = new ColorBuffer({ editor, project });
     await colorBuffer.initialize();
     await timers.setImmediate();
-    expect(attempts).toBe(1);
+    expect(attempts).toBe(quarantined ? 0 : 1);
     expect(colorBuffer.destroyed).toBeFalsy();
     await repairParse();
     await colorBuffer.update();
@@ -97,13 +117,15 @@ describe("Color Inline unavailable syntax", () => {
     });
     await colorBuffer.queueScopeCheck(marker, true);
     await timers.setImmediate();
-    expect(attempts).toBe(1);
+    expect(attempts).toBe(quarantined ? 0 : 1);
     expect(colorBuffer.destroyed).toBeFalsy();
-    const apply = spyOn(marker, "applyScopeDescriptor").and.callThrough();
     await repairParse();
-    await colorBuffer.queueScopeCheck(marker, true);
+    await colorBuffer.variablesAvailable();
+    const resumed = colorBuffer.getColorMarkers()[0];
+    const apply = spyOn(resumed, "applyScopeDescriptor").and.callThrough();
+    await colorBuffer.queueScopeCheck(resumed, true);
     expect(apply).toHaveBeenCalled();
-    expect(marker.lastScopeChain).toContain("source.css");
+    expect(resumed.lastScopeChain).toContain("source.css");
   });
 
   it("stops variable-resolution retries on unchanged unavailable syntax and allows a later retry", async () => {
@@ -121,9 +143,10 @@ describe("Color Inline unavailable syntax", () => {
       return result;
     });
     expect(await colorBuffer.variablesAvailable()).toBeNull();
-    expect(attempts).toBe(1);
+    expect(attempts).toBe(quarantined ? 0 : 1);
     await repairParse();
     await colorBuffer.update();
+    await colorBuffer.variablesAvailable();
     expect(colorBuffer.variableInitialized).toBeTrue();
   });
 
