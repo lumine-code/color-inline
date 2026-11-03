@@ -749,7 +749,7 @@ describe("VariablesCollection", function () {
           createVar("baz", "0.5", [22, 30], "/path/to/foo.styl", 3),
         ];
 
-        spyOn(window, "requestAnimationFrame").and.callFake((callback) => {
+        spyOn(lumine.views, "updateDocument").and.callFake((callback) => {
           frames.push(callback);
         });
         spyOn(Date, "now").and.returnValues(0, 0, 17);
@@ -778,7 +778,7 @@ describe("VariablesCollection", function () {
           createVar("bar", "#000", [12, 22], "/path/to/foo.styl", 2),
           createVar("baz", "#abc", [24, 34], "/path/to/foo.styl", 3),
         ]);
-        spyOn(window, "requestAnimationFrame").and.callFake((callback) => {
+        spyOn(lumine.views, "updateDocument").and.callFake((callback) => {
           frames.push(callback);
         });
         spyOn(Date, "now").and.returnValues(0, 0, 17);
@@ -802,7 +802,7 @@ describe("VariablesCollection", function () {
     describe("::dispose", function () {
       it("stops restoration after its collection has been disposed", function () {
         const frames = [];
-        spyOn(window, "requestAnimationFrame").and.callFake((callback) => frames.push(callback));
+        spyOn(lumine.views, "updateDocument").and.callFake((callback) => frames.push(callback));
         spyOn(Date, "now").and.returnValues(0, 0, 17);
         collection.initialized = false;
         const initialized = jasmine.createSpy("initialized");
@@ -827,7 +827,7 @@ describe("VariablesCollection", function () {
           createVar("second", "2px", [12, 22], FOO_PATH, 2),
         ]);
         const frames = [];
-        spyOn(window, "requestAnimationFrame").and.callFake((callback) => frames.push(callback));
+        spyOn(lumine.views, "updateDocument").and.callFake((callback) => frames.push(callback));
         spyOn(Date, "now").and.returnValues(0, 0, 17);
         spyOn(collection, "evaluateVariableColor").and.callFake((variable) => {
           variable.isColor = true;
