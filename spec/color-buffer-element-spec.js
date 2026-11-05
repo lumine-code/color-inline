@@ -72,8 +72,7 @@ describe("ColorBufferElement", function () {
     jasmineContent.appendChild(workspaceElement);
 
     lumine.config.set("editor.softWrap", true);
-    lumine.config.set("editor.softWrapAtPreferredLineLength", true);
-    lumine.config.set("editor.preferredLineLength", 40);
+    lumine.config.set("editor.softWrapMaxColumn", 40);
 
     lumine.config.set("color-inline.delayBeforeScan", 0);
     lumine.config.set("color-inline.sourceNames", ["*.styl", "*.less"]);
