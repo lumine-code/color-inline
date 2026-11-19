@@ -1,3 +1,6 @@
+const typeText = (editor, text) =>
+  editor.dispatchTextInput({ kind: "insert", text }, () => editor.insertText(text));
+
 const { runs, waitsFor, waitsForPromise } = require("./helpers/waiters"); /*
  * decaffeinate suggestions:
  * DS101: Remove unnecessary use of Array.from
@@ -133,8 +136,8 @@ describe("autocomplete provider for CSS-like files", function () {
         editor.moveToBottom();
         editor.insertText("border: 1px solid ");
         editor.moveToBottom();
-        editor.insertText("b");
-        editor.insertText("a");
+        typeText(editor, "b");
+        typeText(editor, "a");
 
         await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -204,9 +207,9 @@ describe("autocomplete provider for CSS-like files", function () {
           expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
           editor.moveToBottom();
-          editor.insertText("@");
-          editor.insertText("b");
-          editor.insertText("a");
+          typeText(editor, "@");
+          typeText(editor, "b");
+          typeText(editor, "a");
 
           await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -271,9 +274,9 @@ describe("autocomplete provider for CSS-like files", function () {
         expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
         editor.moveToBottom();
-        editor.insertText("$");
-        editor.insertText("o");
-        editor.insertText("t");
+        typeText(editor, "$");
+        typeText(editor, "o");
+        typeText(editor, "t");
 
         await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -302,9 +305,9 @@ describe("autocomplete provider for CSS-like files", function () {
             expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
             editor.moveToBottom();
-            editor.insertText("b");
-            editor.insertText("a");
-            editor.insertText("s");
+            typeText(editor, "b");
+            typeText(editor, "a");
+            typeText(editor, "s");
 
             await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -334,9 +337,9 @@ describe("autocomplete provider for CSS-like files", function () {
             expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
             editor.moveToBottom();
-            editor.insertText("#");
-            editor.insertText("f");
-            editor.insertText("f");
+            typeText(editor, "#");
+            typeText(editor, "f");
+            typeText(editor, "f");
 
             await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -363,9 +366,9 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.moveToBottom();
             editor.insertText("border: 1px solid ");
             editor.moveToBottom();
-            editor.insertText("#");
-            editor.insertText("f");
-            editor.insertText("f");
+            typeText(editor, "#");
+            typeText(editor, "f");
+            typeText(editor, "f");
 
             await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -392,15 +395,15 @@ describe("autocomplete provider for CSS-like files", function () {
             editor.moveToBottom();
             editor.insertText("border: 1px solid ");
             editor.moveToBottom();
-            editor.insertText("r");
-            editor.insertText("g");
-            editor.insertText("b");
-            editor.insertText("(");
-            editor.insertText("2");
-            editor.insertText("5");
-            editor.insertText("5");
-            editor.insertText(",");
-            editor.insertText(" ");
+            typeText(editor, "r");
+            typeText(editor, "g");
+            typeText(editor, "b");
+            typeText(editor, "(");
+            typeText(editor, "2");
+            typeText(editor, "5");
+            typeText(editor, "5");
+            typeText(editor, ",");
+            typeText(editor, " ");
 
             await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -432,10 +435,10 @@ describe("autocomplete provider for CSS-like files", function () {
               editor.moveToBottom();
               editor.insertText("border: ");
               editor.moveToBottom();
-              editor.insertText("6");
-              editor.insertText("p");
-              editor.insertText("x");
-              editor.insertText(" ");
+              typeText(editor, "6");
+              typeText(editor, "p");
+              typeText(editor, "x");
+              typeText(editor, " ");
 
               await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -465,9 +468,9 @@ describe("autocomplete provider for CSS-like files", function () {
             expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
             editor.moveToBottom();
-            editor.insertText("$");
-            editor.insertText("o");
-            editor.insertText("t");
+            typeText(editor, "$");
+            typeText(editor, "o");
+            typeText(editor, "t");
 
             await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -498,9 +501,9 @@ describe("autocomplete provider for CSS-like files", function () {
         expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
         editor.moveToBottom();
-        editor.insertText("f");
-        editor.insertText("o");
-        editor.insertText("o");
+        typeText(editor, "f");
+        typeText(editor, "o");
+        typeText(editor, "o");
 
         await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -523,14 +526,14 @@ describe("autocomplete provider for CSS-like files", function () {
           expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
           editor.moveToBottom();
-          editor.insertText("b");
-          editor.insertText("u");
-          editor.insertText("t");
-          editor.insertText("t");
-          editor.insertText("o");
-          editor.insertText("n");
-          editor.insertText("-");
-          editor.insertText("p");
+          typeText(editor, "b");
+          typeText(editor, "u");
+          typeText(editor, "t");
+          typeText(editor, "t");
+          typeText(editor, "o");
+          typeText(editor, "n");
+          typeText(editor, "-");
+          typeText(editor, "p");
 
           await waitsFor(() => autocompleteManager.delayTimeout != null);
 
@@ -629,9 +632,9 @@ describe("autocomplete provider for Sass files", function () {
         expect(editorView.querySelector("autocomplete-suggestion-list")).not.toExist();
 
         editor.moveToBottom();
-        editor.insertText("$");
-        editor.insertText("b");
-        editor.insertText("a");
+        typeText(editor, "$");
+        typeText(editor, "b");
+        typeText(editor, "a");
 
         await waitsFor(() => autocompleteManager.delayTimeout != null);
 
