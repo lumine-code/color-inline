@@ -33,7 +33,6 @@ describe("Color Inline project-variable scan ownership", () => {
     await colorBuffer.scopeCheckPromise;
   });
   afterEach(async () => {
-    if (mode) mode.service.terminalError = null;
     colorBuffer?.destroy();
     editor?.destroy();
     await lumine.packages.deactivatePackage("color-inline");
@@ -46,10 +45,21 @@ describe("Color Inline project-variable scan ownership", () => {
     await timers.setImmediate();
   }
 
+  function failCandidateWork(failure) {
+    const scanner = project.getCandidateScanner();
+    const scan = scanner.scan.bind(scanner);
+    let reject = true;
+    spyOn(scanner, "scan").and.callFake((...args) =>
+      reject ? Promise.reject(failure) : scan(...args),
+    );
+    return () => (reject = false);
+  }
+
   it("owns an initialized buffer's project-event rejection and can refresh after service recovery", async () => {
     const failure = new Error("Owned project color transport failure");
     const report = spyOn(console, "error");
     const scan = spyOn(colorBuffer, "scanBufferForColors").and.callThrough();
+    const recover = failCandidateWork(failure);
     const unhandled = [];
     const observeRejection = (event) => {
       unhandled.push(event.reason);
@@ -58,7 +68,6 @@ describe("Color Inline project-variable scan ownership", () => {
     window.addEventListener("unhandledrejection", observeRejection);
     try {
       await jasmine.spyOnGlobalErrorsAsync(async (errors) => {
-        mode.service.terminalError = failure;
         project.emitVariablesChangeEvent({});
         await conditionPromise(() => scan.calls.count() > 0);
         await expectAsync(scan.calls.mostRecent().returnValue).toBeRejectedWith(failure);
@@ -68,7 +77,7 @@ describe("Color Inline project-variable scan ownership", () => {
         expect(errors).not.toHaveBeenCalled();
         expect(unhandled).toEqual([]);
         expect(report).toHaveBeenCalledTimes(1);
-        mode.service.terminalError = null;
+        recover();
         const previous = scan.calls.count();
         project.emitVariablesChangeEvent({});
         await conditionPromise(() => scan.calls.count() > previous);
@@ -114,13 +123,13 @@ describe("Color Inline project-variable scan ownership", () => {
   it("keeps an explicit project refresh rejection observable without an unhandled background promise", async () => {
     const failure = new Error("Owned explicit project refresh failure");
     const report = spyOn(console, "error");
+    const recover = failCandidateWork(failure);
     await jasmine.spyOnGlobalErrorsAsync(async (errors) => {
-      mode.service.terminalError = failure;
       await expectAsync(colorBuffer.refreshProjectVariables()).toBeRejectedWith(failure);
       await timers.setTimeout(25);
       expect(report).toHaveBeenCalledTimes(1);
       expect(errors).not.toHaveBeenCalled();
-      mode.service.terminalError = null;
+      recover();
       await colorBuffer.refreshProjectVariables();
       expect(colorBuffer.getColorMarkers().length).toBe(1);
     });

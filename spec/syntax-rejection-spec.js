@@ -40,21 +40,108 @@ describe("Color Inline rejected syntax ownership", () => {
     view = null;
   });
 
+  it("scans immutable text without syntax work when no scope filters are configured", async () => {
+    lumine.config.set("color-inline.ignoredScopes", []);
+    project.setIgnoredScopes([]);
+    const analyze = spyOn(editor, "analyzeSyntax").and.callThrough();
+    const scopes = spyOn(editor, "getScopeDescriptorsForBufferPositions").and.callThrough();
+    const text = spyOn(editor, "getText").and.callThrough();
+    colorBuffer = new ColorBuffer({ editor, project });
+    await colorBuffer.initialize();
+    expect(colorBuffer.getColorMarkers().map((marker) => marker.text)).toEqual(["#123"]);
+    expect(analyze).not.toHaveBeenCalled();
+    expect(scopes).not.toHaveBeenCalled();
+    expect(text).not.toHaveBeenCalled();
+  });
+
+  it("starts candidate work for a dormant buffer on explicit request", async () => {
+    spyOn(editor, "getSyntaxAvailability").and.returnValue({ available: true, deferred: true });
+    const scan = spyOn(project.getCandidateScanner(), "scan").and.callThrough();
+    colorBuffer = new ColorBuffer({ editor, project });
+    await timers.setImmediate();
+    expect(scan).not.toHaveBeenCalled();
+
+    await colorBuffer.initialize();
+    expect(scan).toHaveBeenCalled();
+    expect(colorBuffer.getColorMarkers().map((marker) => marker.text)).toEqual(["#123"]);
+  });
+
+  it("cancels pending candidates when an available grammar changes", async () => {
+    await lumine.packages.activatePackage("language-javascript");
+    const scanner = project.getCandidateScanner();
+    const scan = scanner.scan.bind(scanner);
+    let oldSignal, rejectLatePacket, release;
+    spyOn(scanner, "scan").and.callFake((snapshot, options, consume) => {
+      if (oldSignal) return scan(snapshot, options, consume);
+      oldSignal = options.signal;
+      rejectLatePacket = () =>
+        consume({
+          kind: "candidates",
+          values: [{ index: 11, end: 15, text: "#123" }],
+        });
+      return new Promise((resolve) => (release = resolve));
+    });
+    colorBuffer = new ColorBuffer({ editor, project });
+    const obsolete = colorBuffer.initialize();
+    try {
+      lumine.grammars.assignGrammar(
+        editor.getBuffer(),
+        lumine.grammars.grammarForScopeName("source.js"),
+      );
+      expect(oldSignal.aborted).toBeTrue();
+      expect(rejectLatePacket).toThrowError(/superseded/);
+      release(true);
+      expect(await obsolete).toBeNull();
+      await colorBuffer.initialize();
+      expect(colorBuffer.getColorMarkers().map((marker) => marker.text)).toEqual(["#123"]);
+    } finally {
+      release?.(true);
+    }
+  });
+
+  it("classifies filtered markers when dormant syntax first becomes ready", async () => {
+    editor.setText("/* #123 */ a { color: #456; }");
+    project.setIgnoredScopes(["\\.comment"]);
+    const events = new (require("lumine").Emitter)();
+    spyOn(editor, "onDidTokenize").and.callFake((callback) => events.on("tokenize", callback));
+    let deferred = true;
+    spyOn(editor, "getSyntaxAvailability").and.callFake(() => ({ available: true, deferred }));
+    const scopes = spyOn(editor, "getScopeDescriptorsForBufferPositions").and.callThrough();
+    try {
+      colorBuffer = new ColorBuffer({ editor, project });
+      await colorBuffer.initialize();
+      expect(colorBuffer.getColorMarkers().map((marker) => marker.isIgnored())).toEqual([
+        true,
+        true,
+      ]);
+      expect(scopes).not.toHaveBeenCalled();
+
+      deferred = false;
+      events.emit("tokenize");
+      await colorBuffer.queueScopeCheck();
+      expect(colorBuffer.getColorMarkers().map((marker) => marker.isIgnored())).toEqual([
+        true,
+        false,
+      ]);
+      expect(scopes).toHaveBeenCalled();
+    } finally {
+      events.dispose();
+    }
+  });
+
   for (const phase of ["initial", "variables"])
     it(`owns ${phase} background failures while preserving explicit rejection and allowing changed-input recovery`, async () => {
       const failure = new Error("Owned color transport failure");
       const report = spyOn(console, "error");
       let calls = 0,
-        failVariables = phase === "variables";
-      const request = mode.service.request.bind(mode.service);
-      spyOn(mode.service, "request").and.callFake((session, operation, data, options) => {
-        if (operation === "analyze" && data.module === require.resolve("../lib/syntax-scan")) {
-          calls++;
-          if (failVariables && calls >= 2) return Promise.reject(failure);
-        }
-        return request(session, operation, data, options);
+        reject = true;
+      const scanner = project.getCandidateScanner();
+      const scan = scanner.scan.bind(scanner);
+      spyOn(scanner, "scan").and.callFake((...args) => {
+        calls++;
+        if (reject && (phase === "initial" || calls >= 2)) return Promise.reject(failure);
+        return scan(...args);
       });
-      if (phase === "initial") mode.service.terminalError = failure;
       await jasmine.spyOnGlobalErrorsAsync(async (errors) => {
         colorBuffer = new ColorBuffer({ editor, project });
         if (phase === "initial") {
@@ -76,8 +163,7 @@ describe("Color Inline rejected syntax ownership", () => {
         expect(calls).toBe(before);
         expect(errors).not.toHaveBeenCalled();
         expect(report).toHaveBeenCalledTimes(1);
-        mode.service.terminalError = null;
-        failVariables = false;
+        reject = false;
         if (phase === "initial") mode.service.invalidateConfiguration();
         else editor.getBuffer().append(" ");
         await colorBuffer.update();
@@ -91,6 +177,7 @@ describe("Color Inline rejected syntax ownership", () => {
 
   it("does not start document scans or scope reads for a known failed mode and resumes after recovery", async () => {
     mode.error = new Error("Permanent WASM parse failure");
+    const scan = spyOn(project.getCandidateScanner(), "scan").and.callThrough();
     const analyze = spyOn(editor, "analyzeSyntax").and.callThrough();
     const scopes = spyOn(editor, "getScopeDescriptorsForBufferPositions").and.callThrough();
     const read = spyOn(editor, "getText").and.callThrough();
@@ -104,6 +191,7 @@ describe("Color Inline rejected syntax ownership", () => {
       expect(await colorBuffer.scanBufferForVariables()).toBeNull();
       expect(await colorBuffer.scanBufferForColors()).toBeNull();
     }
+    expect(scan).not.toHaveBeenCalled();
     expect(analyze).not.toHaveBeenCalled();
     expect(scopes).not.toHaveBeenCalled();
     expect(read).not.toHaveBeenCalled();
@@ -112,7 +200,8 @@ describe("Color Inline rejected syntax ownership", () => {
     mode.error = null;
     await colorBuffer.update();
     await colorBuffer.variablesAvailable();
-    expect(analyze).toHaveBeenCalled();
+    expect(scan).toHaveBeenCalled();
+    expect(analyze).not.toHaveBeenCalled();
     expect(colorBuffer.getColorMarkers().length).toBe(1);
     expect(colorBuffer.variableInitialized).toBeTrue();
   });
@@ -185,6 +274,7 @@ describe("Color Inline rejected syntax ownership", () => {
       editor.getSyntaxAvailability = () => ({ available });
       editor.onDidChangeSyntaxAvailability = (callback) => events.on("availability", callback);
       spyOn(ColorBuffer.prototype, "scanBufferForColors").and.resolveTo([]);
+      project.setIgnoredScopes(["\\.comment"]);
       colorBuffer = new ColorBuffer({ editor, project });
       await colorBuffer.variablesAvailable();
       const old = new Promise((resolve, fail) => {

@@ -8,21 +8,19 @@ describe("color analysis input and transfer budgets", () => {
     budget = require("../lib/analysis-budget");
   });
 
-  it("checks the worker mirror length before any full text read or packet", async () => {
+  it("checks the buffer length before taking a text snapshot or starting a scan", async () => {
     const read = jasmine.createSpy("read").and.throwError("must not read");
-    const emit = jasmine.createSpy("emit");
+    const scan = jasmine.createSpy("scan");
     await expectAsync(
-      require("../lib/syntax-scan").candidates(
+      require("../lib/buffer-scanner").scanBufferForColorsAsync(
         {
-          getBuffer: () => ({ getLength: () => 600000000 }),
-          getText: read,
+          getBuffer: () => ({ getLength: () => 600000000, getTextSnapshot: read }),
         },
-        { source: "red" },
-        { signal: new AbortController().signal, emit },
+        { bufferPath: "large.css", scanner: { scan } },
       ),
     ).toBeRejectedWith(jasmine.objectContaining({ code: "ERR_COLOR_ANALYSIS_BUDGET" }));
     expect(read).not.toHaveBeenCalled();
-    expect(emit).not.toHaveBeenCalled();
+    expect(scan).not.toHaveBeenCalled();
   });
 
   it("declines long anchored completion context before reading it", () => {

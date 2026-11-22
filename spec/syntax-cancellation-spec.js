@@ -1,7 +1,7 @@
 const path = require("node:path");
 const timers = require("node:timers");
 
-describe("Color Inline syntax scan ownership", () => {
+describe("Color Inline candidate scan ownership", () => {
   // Processing fixtures use a real grammar; None deliberately disables this package.
   beforeEach(async () => {
     await lumine.packages.activatePackage("language-text");
@@ -16,7 +16,7 @@ describe("Color Inline syntax scan ownership", () => {
     lumine.grammars.syntaxExecution = execution;
   });
   for (const retire of ["supersede", "destroy"])
-    it(`cancels pending worker readiness when its color scan is retired by ${retire}`, async () => {
+    it(`cancels pending candidate work when its color scan is retired by ${retire}`, async () => {
       jasmine.useRealClock();
       lumine.project.setPaths([]);
       await lumine.packages.activatePackage("language-css");
@@ -37,16 +37,17 @@ describe("Color Inline syntax scan ownership", () => {
       const ColorBuffer = require("../lib/color-buffer");
       const colorBuffer = new ColorBuffer({ editor, project });
       await colorBuffer.variablesAvailable();
-      let release, entered, timeout;
-      const gate = new Promise((resolve) => {
-        release = resolve;
-      });
+      let release, entered, timeout, scanSignal;
       const started = new Promise((resolve) => {
         entered = resolve;
       });
-      spyOn(mode.service, "ensureEnvironment").and.callFake(() => {
-        entered();
-        return gate;
+      spyOn(project.getCandidateScanner(), "scan").and.callFake((_snapshot, { signal }) => {
+        scanSignal = signal;
+        return new Promise((resolve) => {
+          release = () => resolve(null);
+          signal.addEventListener("abort", release, { once: true });
+          entered();
+        });
       });
       const pending = colorBuffer.scanBufferForColors();
       try {
@@ -60,6 +61,7 @@ describe("Color Inline syntax scan ownership", () => {
           }),
         ]);
         expect(result).toBeNull();
+        expect(scanSignal.aborted).toBeTrue();
       } finally {
         timers.clearTimeout(timeout);
         release();

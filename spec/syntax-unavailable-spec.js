@@ -102,6 +102,7 @@ describe("Color Inline unavailable syntax", () => {
   });
 
   it("does not requeue scope classification indefinitely for one failed syntax snapshot", async () => {
+    project.setIgnoredScopes(["\\.comment"]);
     colorBuffer = new ColorBuffer({ editor, project });
     await colorBuffer.variablesAvailable();
     await colorBuffer.scopeCheckPromise;
@@ -159,13 +160,16 @@ describe("Color Inline unavailable syntax", () => {
       const started = new Promise((resolve) => {
         entered = resolve;
       });
-      const ensure = mode.service.ensureEnvironment.bind(mode.service);
+      const scanner = project.getCandidateScanner();
+      const realScan = scanner.scan.bind(scanner);
       let held = false;
-      spyOn(mode.service, "ensureEnvironment").and.callFake(() => {
-        if (held) return ensure();
-        held = true;
-        entered();
-        return gate.then(ensure);
+      spyOn(scanner, "scan").and.callFake(async (...args) => {
+        if (!held) {
+          held = true;
+          entered();
+          await gate;
+        }
+        return realScan(...args);
       });
       const scan = spyOn(ColorBuffer.prototype, "scanBufferForColors").and.callThrough();
       colorBuffer = new ColorBuffer({ editor, project });

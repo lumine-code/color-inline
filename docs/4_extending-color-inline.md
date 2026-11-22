@@ -63,6 +63,8 @@ module.exports = {
 
 Contributed handlers retain their live module scope. Built-in project evaluation can run in a worker; external handlers execute in the renderer or receive their matched excerpt over IPC. They are not rebuilt from `toString()`.
 
+Open-document candidate scans use an immutable text snapshot and a shared background task. Live handlers receive candidate excerpts and can consume a prefix, so a shorter match does not skip another color in the suffix. Scope filters are evaluated separately when configured.
+
 ### Adding Variable Expressions
 
 ```json
